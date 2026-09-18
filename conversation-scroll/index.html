@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Now the whole thing is a conversation</title>
+<style>
+  @font-face { font-family: "Feature Deck"; src: url("assets/fonts/FeatureDeck-Regular-Web.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+  @font-face { font-family: "Inter Variable"; src: url("assets/fonts/InterVariable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: "Red Hat Mono"; src: url("assets/fonts/RedHatMono-VF.woff2") format("woff2"); font-weight: 300 700; font-display: swap; }
+
+  :root {
+    --paper: #fcfaf8; --white: #fff; --ink: #1b1a19; --ink-2: #252423;
+    --tertiary: #5f5c59; --neutral-tertiary: #706f6e; --placeholder: #807d7c; --input-placeholder: #8e8985;
+    --border-soft: #f0ebe5; --border-neutral: rgba(31,23,12,.12);
+    --brand-500: #fb6b4b; --brand-200: #ffb5a5;
+    --elev-mid: #fffdfc; --surface-1: #f7f5f3; --selected: rgba(63,60,57,.10);
+    --ease: cubic-bezier(.2,.7,.2,1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); }
+  body { font-family: "Inter Variable", Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font: 500 12px/1.5 "Red Hat Mono", ui-monospace, monospace; letter-spacing: .72px; text-transform: uppercase; color: var(--tertiary); }
+  .ui { font-family: "Inter Variable", Inter, sans-serif; font-feature-settings: "tnum" 1, "lnum" 1; }
+
+  /* ---------- Page scaffolding around the section (context only) ---------- */
+  .lead, .tail { display: grid; place-items: center; color: var(--placeholder); }
+  .lead { height: 70vh; } .tail { height: 120vh; }
+
+  /* ---------- Scroll track + pinned stage ---------- */
+  .track { position: relative; }
+  .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; background: var(--white); border-top: 1px solid var(--border-soft); }
+  .canvas { position: absolute; left: 0; top: 0; width: 1440px; height: 1668px; transform-origin: 0 0; will-change: transform; }
+  .abs { position: absolute; }
+
+  /* Reveal helper: hidden until its step, rises in with a stagger set through --i */
+  .rise { opacity: 0; transform: translateY(12px); transition: opacity .55s var(--ease), transform .55s var(--ease); }
+  .on > .rise, .on.rise { opacity: 1; transform: none; transition-delay: calc(var(--i, 0) * 60ms + var(--d, 0ms)); }
+
+  /* ---------- Header ---------- */
+  .header { left: 336px; top: 160px; width: 768px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+  .tag { display: flex; align-items: center; gap: 12px; }
+  .tag i { width: 6px; height: 6px; border-radius: 50%; background: var(--brand-500); }
+  h1, h2 { margin: 0; font: 400 48px/1.2 "Feature Deck", Georgia, serif; color: var(--ink); }
+  .header p, .col p.copy { margin: 0; font: 400 16px/1.5 "Inter Variable", sans-serif; color: var(--tertiary); }
+
+  /* ---------- Flowers ---------- */
+  .flower { pointer-events: none; transition: left 1s var(--ease), top 1s var(--ease); }
+  .flower img { display: block; width: 100%; }
+  .flower-1 { left: 1002px; top: 236px; width: 668px; }
+  .flower-2 { left: -449px; top: 1020px; width: 758px; opacity: 0; transition: opacity .6s var(--ease), left 1s var(--ease), top 1s var(--ease); }
+  [data-step="4"] .flower-2, [data-step="5"] .flower-2, [data-step="6"] .flower-2 { opacity: 1; }
+  [data-step="7"] .flower-2 { opacity: 1; left: -128px; top: 816px; transition-delay: 0s, 1s, 1s; }
+
+  /* ---------- Routines block ---------- */
+  .col { display: flex; flex-direction: column; gap: 16px; }
+  .col-routines { left: 120px; top: 456px; width: 516px; }
+  .col-shared   { left: 744px; top: 1096px; width: 576px; }
+  .chip-slot { height: 48px; }
+
+  .cards { left: 684px; top: 364px; width: 636px; height: 500px; padding: 32px; display: flex; gap: 12px; }
+  .card { width: 280px; height: 436px; border-radius: 12px; background: rgba(255,253,252,.8); border: 1px solid var(--border-neutral); box-shadow: 0 2px 8px rgba(0,0,0,.04); padding: 12px 16px; display: flex; flex-direction: column; }
+  .lbl { font: 500 12px/16px "Inter Variable", sans-serif; letter-spacing: .12px; color: var(--neutral-tertiary); }
+  .card .row { padding: 6px 8px; }
+  .card .summary { padding: 4px 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .card .summary b { font: 600 18px/24px "Inter Variable", sans-serif; color: var(--ink-2); }
+  .card .summary span { font: 400 12px/16px "Inter Variable", sans-serif; letter-spacing: .12px; color: var(--placeholder); }
+  .card .divider { margin: 0 8px 12px; height: 1px; background: var(--border-neutral); }
+  .topics { flex: 1; padding: 0 8px; display: flex; flex-direction: column; justify-content: space-between; }
+  .topic { display: flex; flex-direction: column; gap: 4px; }
+  .topic .head { display: flex; justify-content: space-between; font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); }
+  .topic .head span { color: var(--neutral-tertiary); }
+  .topic .trackbar { height: 6px; border-radius: 999px; background: var(--border-soft); }
+  .topic .fill { height: 6px; border-radius: 999px; background: var(--brand-200); width: var(--w); transform-origin: left; transform: scaleX(0); transition: transform .9s var(--ease); }
+  .on .topic .fill { transform: none; transition-delay: calc(var(--i, 0) * 80ms + 250ms); }
+  .card .footer { height: 47px; }
+
+  .pop { padding: 12px 16px; }
+  .pop .val { font: 600 18px/24px "Inter Variable", sans-serif; color: var(--ink-2); padding: 0 8px; }
+  .pop .txt { font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); padding: 0 8px; }
+  .pop .sub { font: 400 12px/16px "Inter Variable", sans-serif; letter-spacing: .12px; color: var(--placeholder); padding: 6px 8px 12px; }
+  .pop .divider { margin: 0 0 8px; }
+  .pop .hist { display: flex; align-items: center; gap: 8px; }
+  .qty { font: 600 12px/16px "Inter Variable", sans-serif; color: #5f5e5c; padding: 1px 6px; border: 1px solid var(--border-neutral); border-radius: 999px; }
+  .pop .item { height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-radius: 8px; font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); }
+  .pop .item.sel { background: var(--selected); }
+  .pop .item img { width: 16px; height: 16px; }
+  .pop .more { font: 600 12px/16px "Inter Variable", sans-serif; letter-spacing: .12px; color: var(--ink-2); padding: 8px 8px 0; }
+
+  /* ---------- The Gaia input (two of them) ---------- */
+  .input {
+    height: 48px; padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 8px;
+    background: var(--elev-mid); border: 1px solid var(--border-neutral); box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); white-space: nowrap; overflow: hidden;
+    transition: left .6s var(--ease), top .6s var(--ease), width .45s var(--ease), opacity .4s var(--ease), transform .5s var(--ease);
+  }
+  .input img { width: 24px; height: 24px; flex: 0 0 24px; border-radius: 50%; }   /* clips a stray pixel from the export */
+  .input .text { flex: 1; overflow: hidden; }
+  .input .ph { color: var(--input-placeholder); transition: opacity .25s; }
+  .input .typed { display: none; }
+  .input.typing .ph, .input.done .ph { display: none; }
+  .input.typing .typed, .input.done .typed { display: inline; }
+  .caret { display: none; width: 1px; height: 16px; background: var(--ink-2); vertical-align: -3px; margin-left: 1px; animation: blink 1s steps(2) infinite; }
+  .input.typing .caret { display: inline-block; }
+  @keyframes blink { to { opacity: 0; } }
+
+  #inputA { left: 560px; top: 364px; width: 320px; }
+  [data-step="2"] #inputA { left: 464px; width: 512px; }
+  [data-step="3"] #inputA, [data-step="4"] #inputA, [data-step="5"] #inputA, [data-step="6"] #inputA, [data-step="7"] #inputA { left: 120px; top: 661px; width: 512px; }
+
+  #inputB { left: 560px; top: 1008px; width: 320px; opacity: 0; transform: translateY(10px); pointer-events: none; }
+  [data-step="4"] #inputB { opacity: 1; transform: none; }
+  [data-step="5"] #inputB { opacity: 1; transform: none; left: 464px; width: 512px; }
+  [data-step="6"] #inputB, [data-step="7"] #inputB { left: 464px; width: 512px; opacity: 0; transform: none; transition-duration: .25s; }
+
+  /* ---------- Chat window ---------- */
+  .chat {
+    left: 530px; top: 1008px; width: 380px; height: 436px; border-radius: 16px; overflow: hidden;
+    background: rgba(255,253,252,.85); border: 1px solid var(--border-neutral);
+    display: flex; flex-direction: column;
+    transform-origin: 50% 0; opacity: 0;
+    transform: scale(calc(512 / 380), calc(48 / 436));
+    transition: transform .6s var(--ease), opacity .3s var(--ease), left .7s var(--ease), filter .5s var(--ease);
+  }
+  [data-step="6"] .chat, [data-step="7"] .chat { opacity: 1; transform: none; }
+  [data-step="7"] .chat { left: 218px; filter: blur(2px); transition-delay: 1s; }   /* after the click */
+  .chat .hd { height: 52px; padding: 16px 6px 12px 16px; display: flex; align-items: center; gap: 12px; }
+  .chat .title { display: flex; align-items: center; gap: 4px; font: 600 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); padding: 4px 6px; margin-left: -6px; border-radius: 6px; }
+  .chat .title img { width: 16px; height: 16px; }
+  .chat .ctrl { margin-left: auto; display: flex; }
+  .ibtn { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; transition: background .25s; }
+  .ibtn img { width: 20px; height: 20px; }
+  .ibtn.hover { background: rgba(63,60,57,.08); }
+  .ibtn.press { transform: scale(.92); }
+  .chat .body { flex: 1; padding: 24px 16px 16px; display: flex; flex-direction: column; justify-content: flex-end; gap: 24px; }
+  .msg { font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); }
+  .msg.me { align-self: flex-end; max-width: 360px; padding: 8px 16px; border-radius: 24px; background: var(--surface-1); white-space: nowrap; }
+
+  /* ---------- Cursor ---------- */
+  .cursor { width: 24px; height: 24px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 5; will-change: transform; }
+  .cursor.show { opacity: 1; }
+  .cursor img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.25)); }
+
+  /* ---------- Share modal ---------- */
+  .modal {
+    left: 198px; top: 1152px; width: 420px; height: 148px; border-radius: 12px; z-index: 4;
+    background: var(--elev-mid); border: 1px solid var(--border-neutral); box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    padding: 16px 24px 16px; opacity: 0; transform: translateY(12px) scale(.98);
+    transition: opacity .45s var(--ease), transform .55s var(--ease);
+  }
+  [data-step="7"] .modal { opacity: 1; transform: none; transition-delay: 1.15s; }
+  .modal .mh { display: flex; align-items: flex-start; justify-content: space-between; height: 32px; }
+  .modal .mh b { font: 600 18px/24px "Inter Variable", sans-serif; color: var(--ink-2); padding-top: 4px; }
+  .modal .mh img { width: 20px; height: 20px; margin: 2px -2px 0 0; }
+  .modal .desc { font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); margin-top: 16px; }
+  .modal .field { margin-top: 16px; height: 32px; border: 1px solid var(--border-neutral); border-radius: 8px; display: flex; align-items: center; padding: 0 4px 0 8px; gap: 8px; background: var(--white); }
+  .modal .field span { flex: 1; font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .modal .btn { height: 24px; padding: 0 8px 0 6px; border-radius: 6px; background: var(--ink-2); color: var(--elev-mid); display: flex; align-items: center; gap: 4px; font: 600 12px/16px "Inter Variable", sans-serif; letter-spacing: .12px; }
+  .modal .btn img { width: 16px; height: 16px; }
+  .blink { left: 392px; top: 87px; width: 19px; height: 19px; transform: rotate(180deg) scaleY(-1); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rise, .on > .rise, .input, .chat, .modal, .flower, .flower-2, .topic .fill { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="lead"><span class="mono">Scroll</span></div>
+
+<div class="track" id="track">
+  <section class="stage" id="stage" data-step="1" aria-label="Now the whole thing is a conversation">
+    <div class="canvas" id="canvas">
+
+      <!-- Header -->
+      <div class="abs header">
+        <div class="tag"><i></i><span class="mono">Also new</span></div>
+        <h1>Now the whole thing is a conversation.</h1>
+        <p>Setting up Gaia was already a conversation. Now running it is too.</p>
+      </div>
+
+      <div class="abs flower flower-1" aria-hidden="true"><img src="assets/img/flower-1.png" alt=""></div>
+
+      <!-- Routines: left column -->
+      <div class="abs col col-routines" id="routinesCol">
+        <div class="tag rise" style="--i:0"><i></i><span class="mono">Routines</span></div>
+        <h2 class="rise" style="--i:1">Ask once. Get the answer every week.</h2>
+        <p class="copy rise" style="--i:2">Write what you want to know the way you’d say it:</p>
+        <div class="chip-slot"></div>
+        <p class="copy rise" style="--i:3">Pick daily or weekly. Gaia runs it on schedule and has the answer waiting for you in Gorgias. Start from a template or write your own.</p>
+      </div>
+
+      <!-- Routines: report + schedule -->
+      <div class="abs cards" id="cards">
+        <div class="card rise" style="--i:2">
+          <div class="row lbl">Report</div>
+          <div class="summary"><b>5 knowledge gaps</b><span>Sep 14–20 · 412 conversations</span></div>
+          <div class="divider"></div>
+          <div class="topics">
+            <div class="topic" style="--i:0"><div class="head">Refund status<span>142</span></div><div class="trackbar"><div class="fill" style="--w:248px"></div></div></div>
+            <div class="topic" style="--i:1"><div class="head">Order not received<span>98</span></div><div class="trackbar"><div class="fill" style="--w:171px"></div></div></div>
+            <div class="topic" style="--i:2"><div class="head">Change delivery address<span>71</span></div><div class="trackbar"><div class="fill" style="--w:124px"></div></div></div>
+            <div class="topic" style="--i:3"><div class="head">Discount code failing<span>54</span></div><div class="trackbar"><div class="fill" style="--w:94px"></div></div></div>
+            <div class="topic" style="--i:4"><div class="head">Cancel subscription<span>47</span></div><div class="trackbar"><div class="fill" style="--w:82px"></div></div></div>
+          </div>
+          <div class="footer"></div>
+        </div>
+        <div class="card pop rise" style="--i:3">
+          <div class="row lbl">Next run</div>
+          <div class="val">in 6d 21h</div>
+          <div class="row lbl" style="margin-top:12px">Instructions</div>
+          <div class="txt">Missing knowledge matches report.</div>
+          <div class="sub">Every Monday, 08:00 AM</div>
+          <div class="divider"></div>
+          <div class="row lbl hist">History <span class="qty">8</span></div>
+          <div class="item">Sep 27, 8:00 AM</div>
+          <div class="item sel">Sep 20, 8:00 AM <img src="assets/img/chevron-right.svg" alt=""></div>
+          <div class="item">Sep 13, 8:00 AM</div>
+          <div class="more">Show more</div>
+        </div>
+      </div>
+
+      <!-- Input A: centred under the header, then becomes the chip in the left column -->
+      <div class="abs input" id="inputA">
+        <img src="assets/img/gaia-icon.png" alt="">
+        <span class="text"><span class="ph">Ask Gaia...</span><span class="typed"></span><span class="caret"></span></span>
+      </div>
+
+      <div class="abs flower flower-2" aria-hidden="true"><img src="assets/img/flower-2.png" alt=""></div>
+
+      <!-- Input B: centred below the Routines block, then grows into the chat -->
+      <div class="abs input" id="inputB">
+        <img src="assets/img/gaia-icon.png" alt="">
+        <span class="text"><span class="ph">Ask Gaia...</span><span class="typed"></span><span class="caret"></span></span>
+      </div>
+
+      <!-- Chat window -->
+      <div class="abs chat" id="chat">
+        <div class="hd">
+          <div class="title">Refund delays this week <img src="assets/img/chevron-down.svg" alt=""></div>
+          <div class="ctrl">
+            <div class="ibtn"><img src="assets/img/kebab.svg" alt=""></div>
+            <div class="ibtn" id="shareBtn"><img src="assets/img/share.svg" alt=""></div>
+            <div class="ibtn"><img src="assets/img/expand.svg" alt=""></div>
+            <div class="ibtn"><img src="assets/img/close.svg" alt=""></div>
+          </div>
+        </div>
+        <div class="body" id="chatBody">
+          <div class="msg me rise" style="--i:0;--d:200ms">Why are refunds slow this week?</div>
+          <div class="msg rise" style="--i:1;--d:200ms">Refund tickets are up 38% since Monday. Let me check what changed.</div>
+          <div class="msg me rise" style="--i:2;--d:200ms">What is causing it?</div>
+          <div class="msg rise" style="--i:3;--d:200ms">Most of the delay comes from orders paid with Klarna. The provider added a manual review step on Sep 10, which holds refunds for 3 to 5 days before they clear. 41 of the 52 open refund tickets fit this pattern. The rest are standard exchanges still inside the normal window.</div>
+        </div>
+      </div>
+
+      <div class="abs cursor" id="cursor" aria-hidden="true"><img src="assets/img/hand.svg" alt=""></div>
+
+      <!-- Share modal -->
+      <div class="abs modal" id="modal">
+        <div class="mh"><b>Share chat</b><img src="assets/img/close-modal.svg" alt=""></div>
+        <div class="desc">Any messages you add after sharing stay private.</div>
+        <div class="field"><span>https://gorgias.gaia/share/791eb7ff-863b-403c-95a3-e95aed54bf63</span><div class="btn"><img src="assets/img/copy.svg" alt="">Copy link</div></div>
+        <img class="abs blink" src="assets/img/blink.svg" alt="">
+      </div>
+
+      <!-- Shared chats: right column -->
+      <div class="abs col col-shared" id="sharedCol">
+        <div class="tag rise" style="--i:0;--d:1200ms"><i></i><span class="mono">Shared Chats</span></div>
+        <h2 class="rise" style="--i:1;--d:1200ms">Share the whole conversation with a link.</h2>
+        <p class="copy rise" style="--i:2;--d:1200ms">Worked something out with Gaia? Copy the link. Your teammate sees the full conversation: what you asked, what Gaia checked, and what it found. The link stays read-only and inside your account. Your team learns what a good question looks like by reading one.</p>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<div class="tail"><span class="mono">Next section</span></div>
+
+<script>
+(function () {
+  const STEPS = 7;
+  const CANVAS_W = 1440, CANVAS_H = 1668;
+  const SEGMENT = 720;                      // scroll distance per step
+  const track = document.getElementById('track');
+  const stage = document.getElementById('stage');
+  const canvas = document.getElementById('canvas');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // What each step needs on screen (canvas y range). The stage centres it.
+  const FOCUS = { 1:[160,412], 2:[160,412], 3:[160,880], 4:[420,1100], 5:[420,1100], 6:[760,1460], 7:[976,1508] };
+
+  let vw = 0, vh = 0, scale = 1, step = 0;
+  function layout() {
+    vw = innerWidth; vh = innerHeight;
+    scale = Math.min(1, vw / CANVAS_W);
+    track.style.height = (vh + STEPS * SEGMENT) + 'px';          // one extra segment so step 7 holds before unpinning
+    render();
+  }
+  function targetOffset(s) {
+    const [a, b] = FOCUS[s];
+    const centre = (a + b) / 2;
+    const max = Math.max(0, CANVAS_H - vh / scale);
+    return Math.min(max, Math.max(0, centre - (vh / scale) / 2));
+  }
+  const smooth = (t) => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+
+  function render() {
+    const y = Math.min(Math.max(0, -track.getBoundingClientRect().top), STEPS * SEGMENT);
+    const seg = Math.min(STEPS - 1, Math.floor(y / SEGMENT));      // 0..6
+    const s = seg + 1;                                              // 1..7
+    // Glide to the new offset during the first 45% of each segment, then hold.
+    const t = smooth((y - seg * SEGMENT) / (SEGMENT * 0.45));
+    const off = s === 1 ? targetOffset(1) : targetOffset(s - 1) + (targetOffset(s) - targetOffset(s - 1)) * t;
+    canvas.style.transform = `translate(${(vw - CANVAS_W * scale) / 2}px, ${-off * scale}px) scale(${scale})`;
+    if (s !== step) setStep(s);
+  }
+
+  /* ---------- Steps ---------- */
+  const inputA = document.getElementById('inputA'), inputB = document.getElementById('inputB');
+  const TEXT_A = 'List this week’s busiest topics that have no matching knowledge.';
+  const TEXT_B = 'Why are refunds slow this week?';
+  const on = (id, v) => document.getElementById(id).classList.toggle('on', v);
+
+  function setStep(s) {
+    const prev = step; step = s;
+    stage.dataset.step = s;
+    // Input A text
+    if (s === 1) clearText(inputA);
+    else if (s === 2 && prev < 2) typeText(inputA, TEXT_A);
+    else if (s >= 2) setText(inputA, TEXT_A);
+    // Input B text
+    if (s <= 4) clearText(inputB);
+    else if (s === 5 && prev < 5) typeText(inputB, TEXT_B);
+    else setText(inputB, TEXT_B);
+    // Reveal groups
+    on('routinesCol', s >= 3); on('cards', s >= 3);
+    on('chatBody', s >= 6);
+    on('sharedCol', s >= 7);
+    if (s === 7 && prev === 6) shareSequence(); else if (s !== 7) cancelShare();
+  }
+
+  /* ---------- Typing ---------- */
+  const typers = new WeakMap();
+  function clearText(el) { cancelType(el); el.classList.remove('typing', 'done'); el.querySelector('.typed').textContent = ''; }
+  function setText(el, text) { cancelType(el); el.classList.remove('typing'); el.classList.add('done'); el.querySelector('.typed').textContent = text; }
+  function cancelType(el) { const t = typers.get(el); if (t) { clearTimeout(t); typers.delete(el); } }
+  function typeText(el, text) {
+    if (reduced) return setText(el, text);
+    cancelType(el);
+    const out = el.querySelector('.typed'); out.textContent = '';
+    el.classList.remove('done'); el.classList.add('typing');
+    let i = 0;
+    const tick = () => {
+      out.textContent = text.slice(0, ++i);
+      if (i < text.length) typers.set(el, setTimeout(tick, 18 + Math.random() * 30 + (text[i - 1] === ' ' ? 20 : 0)));
+      else typers.set(el, setTimeout(() => { el.classList.remove('typing'); el.classList.add('done'); typers.delete(el); }, 500));
+    };
+    typers.set(el, setTimeout(tick, 350));
+  }
+
+  /* ---------- Step 7: cursor goes to the share icon, clicks, modal opens ---------- */
+  const cursor = document.getElementById('cursor'), shareBtn = document.getElementById('shareBtn');
+  let shareTimers = [];
+  const later = (fn, ms) => shareTimers.push(setTimeout(fn, ms));
+  function shareSequence() {
+    cancelShare();
+    if (reduced) return;
+    // Share icon centre in canvas space while the chat is still at x=530 (the click happens before it slides).
+    const bx = 530 + 289, by = 1008 + 26;
+    cursor.style.transition = 'none';
+    cursor.style.transform = `translate(${bx + 90}px, ${by + 160}px)`;
+    void cursor.offsetWidth;
+    cursor.style.transition = 'transform .75s cubic-bezier(.3,.7,.2,1), opacity .3s';
+    later(() => { cursor.classList.add('show'); cursor.style.transform = `translate(${bx - 6}px, ${by + 2}px)`; }, 60);
+    later(() => shareBtn.classList.add('hover'), 700);
+    later(() => { shareBtn.classList.add('press'); cursor.style.transform = `translate(${bx - 6}px, ${by + 2}px) scale(.9)`; }, 900);
+    later(() => { shareBtn.classList.remove('press'); cursor.style.transform = `translate(${bx - 6}px, ${by + 2}px)`; }, 1020);
+    later(() => { shareBtn.classList.remove('hover'); cursor.classList.remove('show'); }, 1500);
+  }
+  function cancelShare() {
+    shareTimers.forEach(clearTimeout); shareTimers = [];
+    cursor.classList.remove('show'); shareBtn.classList.remove('hover', 'press');
+  }
+
+  addEventListener('scroll', render, { passive: true });
+  addEventListener('resize', layout);
+  layout();
+})();
+</script>
+</body>
+</html>
