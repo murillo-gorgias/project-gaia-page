@@ -159,6 +159,8 @@
 .ba-wrap .stat strong { font-size: 40px; }}
 @media (prefers-reduced-motion: reduce) {.ba-wrap .scene, .ba-wrap .card, .ba-wrap .toggle button, .ba-wrap .toggle__thumb { transition: none; }
 .ba-wrap .is-entering, .ba-wrap .is-entering * { animation: none !important; }}
+/* Page override: the prototype caps .ba at 1440px; on this page it runs edge to edge */
+.ba-wrap .ba { max-width: none; }
 /* ---- Conversation scroll section (scoped) ---- */
 @font-face { font-family: "Feature Deck"; src: url("assets/fonts/FeatureDeck-Regular-Web.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Inter Variable"; src: url("assets/fonts/InterVariable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
@@ -990,7 +992,9 @@
     track.style.height = (CANVAS_H * scale) + 'px';
     offset = targetOff = 0;
     canvas.style.transform = `translate(${(vw - CANVAS_W * scale) / 2}px, 0) scale(${scale})`;
-    if (wasPinned) scrollTo(0, trackTop + before * scale);          // keep the same content in view
+    // Keep the same content in view. Force an instant jump: the host page may set scroll-behavior: smooth,
+    // which would turn this into a visible self-scroll.
+    if (wasPinned) scrollTo({ top: trackTop + before * scale, behavior: 'instant' });
   }
 
   /* ---------- Steps ---------- */

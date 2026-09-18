@@ -348,7 +348,9 @@
     track.style.height = (CANVAS_H * scale) + 'px';
     offset = targetOff = 0;
     canvas.style.transform = `translate(${(vw - CANVAS_W * scale) / 2}px, 0) scale(${scale})`;
-    if (wasPinned) scrollTo(0, trackTop + before * scale);          // keep the same content in view
+    // Keep the same content in view. Force an instant jump: the host page may set scroll-behavior: smooth,
+    // which would turn this into a visible self-scroll.
+    if (wasPinned) scrollTo({ top: trackTop + before * scale, behavior: 'instant' });
   }
 
   /* ---------- Steps ---------- */
