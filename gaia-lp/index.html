@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gaia — Make your AI Agent better every day</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+/* Tokens the embedded sections expect */
+:root { --fade: 450ms; --card-bg: rgba(252,250,248,.8); --content-tertiary: #5f5c59; --input-placeholder: #8e8985; --selected: rgba(63,60,57,.10); }
+/* ---- Before/After section (scoped) ---- */
+@font-face { font-family: "Feature Deck"; src: url("assets/fonts/FeatureDeck-Regular-Web.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Inter Variable"; src: url("assets/fonts/InterVariable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Red Hat Mono"; src: url("assets/fonts/RedHatMono-VF.woff2") format("woff2"); font-weight: 300 700; font-display: swap; }
+.ba-wrap .ba {
+    position: relative;
+    width: 100%;
+    max-width: 1440px;
+    min-height: 780px;
+    margin: 0 auto;
+    padding: 80px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    overflow: hidden;
+    isolation: isolate;
+  }
+.ba-wrap .scene {
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity var(--fade) ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+.ba-wrap .scene img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ba-wrap .ba[data-state="before"] .scene--before, .ba-wrap .ba[data-state="after"]  .scene--after { opacity: 1; }
+.ba-wrap .particles { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.ba-wrap .particles > * {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; visibility: hidden;
+    transition: opacity var(--fade) ease, visibility 0s linear var(--fade);
+  }
+.ba-wrap .ba[data-state="before"] .particles--before, .ba-wrap .ba[data-state="after"]  .particles--after { opacity: 1; visibility: visible; transition-delay: 0s; }
+.ba-wrap .glass { overflow: hidden; }
+.ba-wrap .drop, .ba-wrap .trail {
+    position: absolute; left: 0; top: 0;
+    will-change: transform;
+  }
+.ba-wrap .drop {
+    border-radius: 50%;
+    -webkit-backdrop-filter: blur(2.5px) contrast(1.18) saturate(1.15);
+    backdrop-filter: blur(2.5px) contrast(1.18) saturate(1.15);
+    background:
+      radial-gradient(ellipse 26% 18% at 31% 25%, rgba(255,255,255,.9) 0, rgba(255,255,255,.3) 55%, rgba(255,255,255,0) 100%),
+      radial-gradient(ellipse 50% 26% at 50% 90%, rgba(255,255,255,.22) 0, rgba(255,255,255,0) 100%),
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,0) 58%, rgba(0,0,0,.13) 76%, rgba(255,255,255,.42) 89%, rgba(255,255,255,.1) 96%, rgba(255,255,255,0) 100%);
+    box-shadow:
+      inset 0 0 1px rgba(255,255,255,.4),
+      inset -1px -2px 3px rgba(0,0,0,.12),
+      0 2px 5px rgba(0,0,0,.16);
+  }
+.ba-wrap .drop.is-sliding { border-radius: 48% 48% 50% 50% / 38% 38% 62% 62%; }
+.ba-wrap .trail {
+    width: 2px; height: 1px; border-radius: 2px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,.10));
+    -webkit-backdrop-filter: blur(1px) brightness(1.06);
+    backdrop-filter: blur(1px) brightness(1.06);
+    transform-origin: top center;
+  }
+.ba-wrap .ba[data-layer="over"] .particles { z-index: 5; }
+.ba-wrap .toggle {
+    position: relative; z-index: 2;
+    display: flex; gap: 2px; padding: 2px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-bold);
+    border-radius: 999px;
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  }
+.ba-wrap .toggle__thumb {
+    position: absolute; top: 2px; left: 0; height: calc(100% - 4px);
+    border-radius: 999px; background: var(--ink);
+    transition: transform 380ms cubic-bezier(.3,.8,.3,1), width 380ms cubic-bezier(.3,.8,.3,1);
+    will-change: transform, width;
+  }
+.ba-wrap .toggle button {
+    appearance: none; border: 0; cursor: pointer; position: relative;
+    padding: 6px 24px; border-radius: 999px;
+    background: transparent; color: var(--ink);
+    font: 500 16px/1.5 "Inter Variable", Inter, sans-serif;
+    transition: color 300ms ease;
+  }
+.ba-wrap .toggle button[aria-pressed="true"] { color: var(--paper); }
+.ba-wrap .toggle button:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.ba-wrap .cards { position: relative; z-index: 2; display: grid; width: 100%; max-width: 576px; }
+.ba-wrap .card {
+    grid-area: 1 / 1;
+    align-self: start;            
+    display: flex; flex-direction: column; gap: 24px;
+    padding: 32px;
+    border-radius: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-default);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    opacity: 0;
+    transition: opacity var(--fade) ease;
+    pointer-events: none;
+  }
+.ba-wrap .card--after { overflow: hidden; }
+.ba-wrap .ba[data-state="before"] .card--before, .ba-wrap .ba[data-state="after"]  .card--after { opacity: 1; pointer-events: auto; }
+.ba-wrap .card__top { display: flex; flex-direction: column; gap: 16px; }
+.ba-wrap .eyebrow { display: flex; align-items: center; gap: 12px; }
+.ba-wrap .eyebrow__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brand-500); }
+.ba-wrap .eyebrow__logo {
+    width: 24px; height: 24px; border-radius: 50%; overflow: hidden;
+    border: 0.75px solid var(--border-faint);
+    box-shadow: 0 0 0 1px var(--border-default);
+  }
+.ba-wrap .eyebrow__logo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ba-wrap .mono {
+    font: 500 12px/1.5 "Red Hat Mono", ui-monospace, monospace;
+    letter-spacing: 0.72px; text-transform: uppercase;
+    color: var(--content-tertiary);
+  }
+.ba-wrap .card h3 {
+    margin: 0;
+    font: 400 28px/1.3 "Feature Deck", Georgia, serif;
+    color: var(--ink);
+  }
+.ba-wrap .card ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ba-wrap .card li { display: flex; align-items: center; gap: 12px; padding: 12px 0; font: 400 16px/1.5 "Inter Variable", Inter, sans-serif; }
+.ba-wrap .card li img { width: 20px; height: 20px; flex: 0 0 20px; }
+.ba-wrap .stat { display: flex; flex-direction: column; gap: 4px; }
+.ba-wrap .card--after .stat { gap: 8px; }
+.ba-wrap .stat strong { font: 400 48px/1.2 "Feature Deck", Georgia, serif; }
+.ba-wrap .flower {
+    position: absolute;
+    width: 442.8px; height: 527.3px;
+    right: -213.4px; bottom: -263px;
+    transform: rotate(-24.18deg);
+    pointer-events: none;
+  }
+.ba-wrap .flower img { display: block; width: 100%; height: 100%; }
+.ba-wrap .scene img { transform: scale(1); }
+.ba-wrap .scene.is-entering img { animation: ba-settle 1100ms cubic-bezier(.2,.7,.2,1) both; }
+@keyframes ba-settle { from { transform: scale(1.035); } to { transform: scale(1); } }
+.ba-wrap .card.is-entering { animation: ba-cardIn 520ms cubic-bezier(.2,.7,.2,1) both; }
+@keyframes ba-cardIn { from { transform: translateY(10px) scale(.985); } to { transform: none; } }
+.ba-wrap .card.is-entering :is(.eyebrow, .ba-wrap h3, .ba-wrap li, .ba-wrap .stat) {
+    animation: ba-rise 560ms cubic-bezier(.2,.7,.2,1) both;
+    animation-delay: calc(var(--i, 0) * 55ms + 80ms);
+  }
+@keyframes ba-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.ba-wrap .card.is-entering .flower img { animation: ba-bloom 900ms cubic-bezier(.2,.7,.2,1) both; animation-delay: 200ms; }
+@keyframes ba-bloom { from { opacity: 0; transform: translate(28px, 28px) scale(.96); } to { opacity: 1; transform: none; } }
+@media (max-width: 640px) {.ba-wrap .ba { min-height: 0; padding: 48px 16px; }
+.ba-wrap .card { padding: 24px; }
+.ba-wrap .card h3 { font-size: 24px; }
+.ba-wrap .stat strong { font-size: 40px; }}
+@media (prefers-reduced-motion: reduce) {.ba-wrap .scene, .ba-wrap .card, .ba-wrap .toggle button, .ba-wrap .toggle__thumb { transition: none; }
+.ba-wrap .is-entering, .ba-wrap .is-entering * { animation: none !important; }}
+/* ---- Conversation scroll section (scoped) ---- */
+@font-face { font-family: "Feature Deck"; src: url("assets/fonts/FeatureDeck-Regular-Web.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Inter Variable"; src: url("assets/fonts/InterVariable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Red Hat Mono"; src: url("assets/fonts/RedHatMono-VF.woff2") format("woff2"); font-weight: 300 700; font-display: swap; }
+.cs .mono { font: 500 12px/1.5 "Red Hat Mono", ui-monospace, monospace; letter-spacing: .72px; text-transform: uppercase; color: var(--tertiary); }
+.cs .ui { font-family: "Inter Variable", Inter, sans-serif; font-feature-settings: "tnum" 1, "lnum" 1; }
+.cs .lead, .cs .tail { display: grid; place-items: center; color: var(--placeholder); }
+.cs .lead { height: 70vh; }
+.cs .tail { height: 120vh; }
+.cs .track { position: relative; }
+.cs .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; background: var(--white); border-top: 1px solid var(--border-soft); }
+.cs .canvas { position: absolute; left: 0; top: 0; width: 1440px; height: 1668px; transform-origin: 0 0; will-change: transform; }
+.cs .abs { position: absolute; }
+.cs .rise { opacity: 0; transition: opacity .25s ease; }
+.cs .on > .rise, .cs .on.rise { animation: cs-rise 620ms var(--ease) both; animation-delay: calc(var(--i, 0) * 55ms + var(--d, 0ms) + 80ms); }
+@keyframes cs-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.cs .on > .card { animation-name: cs-cardIn; animation-duration: 700ms; }
+@keyframes cs-cardIn { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+.cs .header { left: 336px; top: 160px; width: 768px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.cs .tag { display: flex; align-items: center; gap: 12px; }
+.cs .tag i { width: 6px; height: 6px; border-radius: 50%; background: var(--brand-500); }
+.cs h1, .cs h2 { margin: 0; font: 400 48px/1.2 "Feature Deck", Georgia, serif; color: var(--ink); }
+.cs .header p, .cs .col p.copy { margin: 0; font: 400 16px/1.5 "Inter Variable", sans-serif; color: var(--tertiary); }
+.cs .flower { pointer-events: none; }
+.cs .flower img { display: block; width: 100%; }
+.cs .flower-1 { left: 1002px; top: 236px; width: 668px; }
+.cs .flower-2 { left: -128px; top: 816px; width: 758px; opacity: 0; transform: translate(-321px, 204px); will-change: transform;
+    transition: opacity .8s var(--ease), transform 1.2s var(--ease); }
+.cs [data-step="4"] .flower-2, .cs [data-step="5"] .flower-2, .cs [data-step="6"] .flower-2 { opacity: 1; }
+.cs [data-step="7"] .flower-2 { opacity: 1; transform: none; transition-delay: 0s, 1s; }
+.cs .col { display: flex; flex-direction: column; gap: 16px; }
+.cs .col-routines { left: 120px; top: 456px; width: 516px; }
+.cs .col-shared { left: 744px; top: 1096px; width: 576px; }
+.cs .chip-slot { height: 48px; }
+.cs .cards { left: 684px; top: 364px; width: 636px; height: 500px; padding: 32px; display: flex; gap: 12px; }
+.cs .card { width: 280px; height: 436px; border-radius: 12px; background: rgba(255,253,252,.8); border: 1px solid var(--border-neutral); box-shadow: 0 2px 8px rgba(0,0,0,.04); padding: 12px 16px; display: flex; flex-direction: column; }
+.cs .lbl { font: 500 12px/16px "Inter Variable", sans-serif; letter-spacing: .12px; color: var(--neutral-tertiary); }
+.cs .card .row { padding: 6px 8px; }
+.cs .card .summary { padding: 4px 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+.cs .card .summary b { font: 600 18px/24px "Inter Variable", sans-serif; color: var(--ink-2); }
+.cs .card .summary span { font: 400 12px/16px "Inter Variable", sans-serif; letter-spacing: .12px; color: var(--placeholder); }
+.cs .card .divider { margin: 0 8px 12px; height: 1px; background: var(--border-neutral); }
+.cs .topics { flex: 1; padding: 0 8px; display: flex; flex-direction: column; justify-content: space-between; }
+.cs .topic { display: flex; flex-direction: column; gap: 4px; }
+.cs .topic .head { display: flex; justify-content: space-between; font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); }
+.cs .topic .head span { color: var(--neutral-tertiary); }
+.cs .topic .trackbar { height: 6px; border-radius: 999px; background: var(--border-soft); }
+.cs .topic .fill { height: 6px; border-radius: 999px; background: var(--brand-200); width: var(--w); transform-origin: left; transform: scaleX(0); transition: transform .9s var(--ease); }
+.cs .on .topic .fill { transform: none; transition-delay: calc(var(--i, 0) * 80ms + 250ms); }
+.cs .card .footer { height: 47px; }
+.cs .pop { padding: 12px 16px; }
+.cs .pop .val { font: 600 18px/24px "Inter Variable", sans-serif; color: var(--ink-2); padding: 0 8px; }
+.cs .pop .txt { font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); padding: 0 8px; }
+.cs .pop .sub { font: 400 12px/16px "Inter Variable", sans-serif; letter-spacing: .12px; color: var(--placeholder); padding: 6px 8px 12px; }
+.cs .pop .divider { margin: 0 0 8px; }
+.cs .pop .hist { display: flex; align-items: center; gap: 8px; }
+.cs .qty { font: 600 12px/16px "Inter Variable", sans-serif; color: #5f5e5c; padding: 1px 6px; border: 1px solid var(--border-neutral); border-radius: 999px; }
+.cs .pop .item { height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-radius: 8px; font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); }
+.cs .pop .item.sel { background: var(--selected); }
+.cs .pop .item img { width: 16px; height: 16px; }
+.cs .pop .more { font: 600 12px/16px "Inter Variable", sans-serif; letter-spacing: .12px; color: var(--ink-2); padding: 8px 8px 0; }
+.cs .input {
+    height: 48px; padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 8px;
+    background: var(--elev-mid); border: 1px solid var(--border-neutral); box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); white-space: nowrap; overflow: hidden;
+    will-change: transform;
+    transition: transform .75s var(--ease), width .55s var(--ease), opacity .4s var(--ease);
+  }
+.cs .input img { width: 24px; height: 24px; flex: 0 0 24px; border-radius: 50%; }
+.cs .input .text { flex: 1; overflow: hidden; }
+.cs .input .ph { color: var(--input-placeholder); transition: opacity .25s; }
+.cs .input .typed { display: none; }
+.cs .input.typing .ph, .cs .input.done .ph { display: none; }
+.cs .input.typing .typed, .cs .input.done .typed { display: inline; }
+.cs .caret { display: none; width: 1px; height: 16px; background: var(--ink-2); vertical-align: -3px; margin-left: 1px; animation: cs-blink 1s steps(2) infinite; }
+.cs .input.typing .caret { display: inline-block; }
+@keyframes cs-blink { to { opacity: 0; } }
+.cs #inputA { left: 120px; top: 661px; width: 320px; transform: translate(440px, -297px); }
+.cs [data-step="2"] #inputA { width: 512px; transform: translate(344px, -297px); }
+.cs [data-step="3"] #inputA, .cs [data-step="4"] #inputA, .cs [data-step="5"] #inputA, .cs [data-step="6"] #inputA, .cs [data-step="7"] #inputA { width: 512px; transform: none; }
+.cs #inputB { left: 464px; top: 1008px; width: 320px; opacity: 0; transform: translate(96px, 10px); pointer-events: none; }
+.cs [data-step="4"] #inputB { opacity: 1; transform: translate(96px, 0); }
+.cs [data-step="5"] #inputB { opacity: 1; transform: none; width: 512px; }
+.cs [data-step="6"] #inputB, .cs [data-step="7"] #inputB { width: 512px; opacity: 0; transform: none; transition-duration: .25s; }
+.cs .chat {
+    left: 530px; top: 1008px; width: 380px; height: 436px; border-radius: 16px; overflow: hidden;
+    background: rgba(255,253,252,.85); border: 1px solid var(--border-neutral);
+    display: flex; flex-direction: column;
+    transform-origin: 50% 0; opacity: 0; will-change: transform;
+    transform: scale(calc(512 / 380), calc(48 / 436));
+    transition: transform .8s var(--ease), opacity .35s var(--ease), filter .6s var(--ease);
+  }
+.cs [data-step="6"] .chat, .cs [data-step="7"] .chat { opacity: 1; transform: none; }
+.cs [data-step="7"] .chat { transform: translateX(-312px); filter: blur(2px); transition-delay: 1s; }
+.cs .chat .hd { height: 52px; padding: 16px 6px 12px 16px; display: flex; align-items: center; gap: 12px; }
+.cs .chat .title { display: flex; align-items: center; gap: 4px; font: 600 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); padding: 4px 6px; margin-left: -6px; border-radius: 6px; }
+.cs .chat .title img { width: 16px; height: 16px; }
+.cs .chat .ctrl { margin-left: auto; display: flex; }
+.cs .ibtn { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; transition: background .25s; }
+.cs .ibtn img { width: 20px; height: 20px; }
+.cs .ibtn.hover { background: rgba(63,60,57,.08); }
+.cs .ibtn.press { transform: scale(.92); }
+.cs .chat .body { flex: 1; padding: 24px 16px 16px; display: flex; flex-direction: column; justify-content: flex-end; gap: 24px; }
+.cs .msg { font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); }
+.cs .msg.me { align-self: flex-end; max-width: 360px; padding: 8px 16px; border-radius: 24px; background: var(--surface-1); white-space: nowrap; }
+.cs .cursor { width: 24px; height: 24px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 5; will-change: transform; }
+.cs .cursor.show { opacity: 1; }
+.cs .cursor img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.25)); }
+.cs .modal {
+    left: 198px; top: 1152px; width: 420px; height: 148px; border-radius: 12px; z-index: 4;
+    background: var(--elev-mid); border: 1px solid var(--border-neutral); box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    padding: 16px 24px 16px; opacity: 0; transform: translateY(12px) scale(.98);
+    transition: opacity .45s var(--ease), transform .55s var(--ease);
+  }
+.cs [data-step="7"] .modal { opacity: 1; transform: none; transition-delay: 1.15s; }
+.cs .blink { left: 384px; top: 90px; width: 19px; height: 19px; opacity: 0; transform-origin: 50% 50%; }
+.cs [data-step="7"] .blink { animation: cs-blinkIn 1.1s var(--ease) both; animation-delay: 1.75s; }
+@keyframes cs-blinkIn {
+    0%   { opacity: 0; transform: scale(.3) rotate(-20deg); }
+    35%  { opacity: 1; transform: scale(1.15) rotate(0); }
+    55%  { opacity: .35; transform: scale(1); }
+    75%  { opacity: 1; transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+.cs .modal .mh { display: flex; align-items: flex-start; justify-content: space-between; height: 32px; }
+.cs .modal .mh b { font: 600 18px/24px "Inter Variable", sans-serif; color: var(--ink-2); padding-top: 4px; }
+.cs .modal .mh img { width: 20px; height: 20px; margin: 2px -2px 0 0; }
+.cs .modal .desc { font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); margin-top: 16px; }
+.cs .modal .field { margin-top: 16px; height: 32px; border: 1px solid var(--border-neutral); border-radius: 8px; display: flex; align-items: center; padding: 0 4px 0 8px; gap: 8px; background: var(--white); }
+.cs .modal .field span { flex: 1; font: 400 14px/20px "Inter Variable", sans-serif; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cs .modal .btn { height: 24px; padding: 0 8px 0 6px; border-radius: 6px; background: var(--ink-2); color: var(--elev-mid); display: flex; align-items: center; gap: 4px; font: 600 12px/16px "Inter Variable", sans-serif; letter-spacing: .12px; }
+.cs .modal .btn img { width: 16px; height: 16px; }
+@media (prefers-reduced-motion: reduce) {.cs .rise, .cs .on > .rise, .cs .input, .cs .chat, .cs .modal, .cs .flower, .cs .flower-2, .cs .topic .fill, .cs .blink { transition: none !important; animation: none !important; opacity: 1; }}
+</style>
+</head>
+<body>
+
+<!-- ============================== NAV ============================== -->
+<header class="nav">
+  <div class="nav__in">
+    <div class="nav__left">
+      <a class="nav__logo" href="#"><img src="assets/img/gorgias-lockup.svg" alt="Gorgias"></a>
+      <nav class="nav__menu">
+        <a class="nav__item" href="#">Product <img src="assets/img/caret-down.svg" alt=""></a>
+        <a class="nav__item nav__item--on" href="#">Solutions <img src="assets/img/caret-down.svg" alt=""></a>
+        <a class="nav__item" href="#">Pricing</a>
+        <a class="nav__item" href="#">Integrations <img src="assets/img/caret-down.svg" alt=""></a>
+        <a class="nav__item" href="#">Resources <img src="assets/img/caret-down.svg" alt=""></a>
+      </nav>
+    </div>
+    <div class="nav__cta">
+      <a class="btn btn--secondary btn--sm" href="#">Book a demo</a>
+      <a class="btn btn--primary btn--sm" href="#">Book a demo</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============================== HERO ============================== -->
+<section class="hero" id="hero">
+  <div class="hero__orbit a" style="--i:0"><img src="assets/img/hero-left.svg" alt=""></div>
+  <div class="hero__in">
+    <div class="hero__top">
+      <div class="hero__badge a" style="--i:0">
+        <div class="hero__icon"><img src="assets/img/gaia-logo-lg.png" alt=""></div>
+        <span class="mono">Meet Gaia</span>
+      </div>
+      <h1 class="h2 a" style="--i:1">Make your AI Agent better every day with Gaia</h1>
+    </div>
+    <p class="lead a" style="--i:2">It finds what's holding your AI Agent back, drafts the fix, and ships on your approval.</p>
+    <div class="hero__cta a" style="--i:3">
+      <a class="btn btn--primary" href="#diagnose">See how it works</a>
+      <a class="btn btn--secondary" href="#">Try it live</a>
+    </div>
+  </div>
+  <div class="hero__flower a" style="--i:1"><img src="assets/img/hero-right.png" alt=""></div>
+</section>
+
+<!-- ============================== FEATURES (rotating) ============================== -->
+<section class="features">
+  <div class="marquee">
+    <div class="marquee__track" style="--dur: 36s">
+      <div class="pill">Ships on approval</div><div class="pill">No specialist needed</div><div class="pill">15-minute reviews</div><div class="pill">Drafts in your voice</div><div class="pill">Ships on approval</div><div class="pill">No specialist needed</div><div class="pill">15-minute reviews</div><div class="pill">Drafts in your voice</div>
+      <div class="pill">Ships on approval</div><div class="pill">No specialist needed</div><div class="pill">15-minute reviews</div><div class="pill">Drafts in your voice</div><div class="pill">Ships on approval</div><div class="pill">No specialist needed</div><div class="pill">15-minute reviews</div><div class="pill">Drafts in your voice</div>
+    </div>
+    <div class="marquee__fade"></div>
+  </div>
+</section>
+
+<!-- ============================== LOGO GRID (rotating behind the copy) ============================== -->
+<section class="logos">
+  <div class="logos__track" id="logosTrack"></div>
+  <div class="logos__copy">6,000+ brands used <span class="gl"><img src="assets/img/gaia-icon.png" alt="">Gaia in the last 30 days.</span></div>
+</section>
+
+<!-- ============================== YOUR SETUP ============================== -->
+<section class="section setup" data-reveal>
+  <div class="shead">
+    <span class="tag rv" style="--i:0"><i></i><span class="mono">Setup</span></span>
+    <h2 class="h3 rv" style="--i:1">Your setup, built from your own tickets.</h2>
+    <p class="lead rv" style="--i:2">Brief Gaia like you’d brief a new ops hire. It checks your ticket history, tells you what AI Agent can handle now and what needs more from you, and drafts the Skills when you ask.</p>
+  </div>
+  <div class="setup__img rv rv--card" style="--i:3"><img src="assets/img/your-setup@2x.jpg" alt="Gaia reviewing Skills in Gorgias"></div>
+</section>
+
+<!-- ============================== START WITH A SENTENCE (rotating) ============================== -->
+<section class="sentence" data-reveal>
+  <div class="container">
+    <div class="shead">
+      <span class="tag rv" style="--i:0"><i></i><span class="mono">Prompts</span></span>
+      <h2 class="h4 rv" style="--i:1">Start with a sentence.</h2>
+    </div>
+    <div class="marquee rv" style="--i:2">
+      <div class="marquee__track" style="--dur: 48s" id="sentenceTrack"></div>
+      <div class="marquee__fade"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== DIAGNOSE (shimmer) ============================== -->
+<section class="section diagnose" id="diagnose" data-reveal>
+  <div class="container">
+    <div class="shead">
+      <span class="tag rv" style="--i:0"><i></i><span class="mono">How Gaia works</span></span>
+      <h2 class="h3 rv" style="--i:1">Diagnose. Draft. <em>Ship</em>.</h2>
+      <p class="lead rv" style="--i:2">Every gap Gaia closes is a conversation AI Agent resolves, so your team doesn’t have to.</p>
+    </div>
+    <div class="dcards" id="dcards">
+      <div class="dcard rv rv--card" style="--i:3"><div class="fi"><img src="assets/img/icon-target.svg" alt=""></div><div><h3>Diagnoses</h3><p>Ask, and Gaia reads handovers, low-CSAT replies, and conflicting knowledge, then points to the gaps holding your automation back.</p></div></div>
+      <div class="dcard rv rv--card" style="--i:4"><div class="fi"><img src="assets/img/icon-pencil.svg" alt=""></div><div><h3>Drafts</h3><p>Say the word, and it writes the fix in your brand voice, based on your real tickets. Edit anything you want.</p></div></div>
+      <div class="dcard rv rv--card" style="--i:5"><div class="fi"><img src="assets/img/icon-send.svg" alt=""></div><div><h3>Ships</h3><p>Approve it, and Gaia publishes the change to your live setup. Until you do, nothing moves.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== BEFORE / AFTER ============================== -->
+<section class="section ba-section" data-reveal>
+  <div class="container">
+    <h2 class="h3 rv" style="--i:0">Tuning AI used to be someone’s whole job.<br>Now Gaia does the legwork.</h2>
+    <div class="ba-wrap rv rv--card" style="--i:1">
+<section class="ba" data-state="before" data-layer="over" id="ba">
+  <!-- Scenes: the two photos. Particles are a separate layer so their stacking can be switched. -->
+  <div class="scene scene--before" aria-hidden="true"><img src="assets/img/rain-bg.jpg" alt=""></div>
+  <div class="scene scene--after" aria-hidden="true"><img src="assets/img/spring-bg.jpg" alt=""></div>
+  <div class="particles" aria-hidden="true">
+    <canvas id="rain" class="particles--before"></canvas>
+    <div id="glass" class="glass particles--before"></div>
+    <canvas id="petals" class="particles--after"></canvas>
+  </div>
+
+  <div class="toggle" role="group" aria-label="Before or after Gaia">
+    <span class="toggle__thumb" aria-hidden="true"></span>
+    <button type="button" data-set="before" aria-pressed="true">Before</button>
+    <button type="button" data-set="after" aria-pressed="false">After</button>
+  </div>
+
+  <div class="cards">
+    <article class="card card--before">
+      <div class="card__top">
+        <div class="card__top">
+          <div class="eyebrow"><span class="eyebrow__dot"></span><span class="mono">Without Gaia</span></div>
+          <h3>Your setup goes stale the week nobody touches it.</h3>
+        </div>
+        <ul>
+          <li><img src="assets/img/before-cross.svg" alt="">Audits happen after something breaks</li>
+          <li><img src="assets/img/before-cross.svg" alt="">Macros, knowledge, and Skills drift out of sync</li>
+          <li><img src="assets/img/before-cross.svg" alt="">Someone rewrites instructions by hand</li>
+          <li><img src="assets/img/before-cross.svg" alt="">Automation slips and nobody can say why</li>
+          <li><img src="assets/img/before-cross.svg" alt="">The real fix is an AI Ops hire that rarely gets approved</li>
+        </ul>
+      </div>
+      <div class="stat">
+        <strong>~10 hrs / wk</strong>
+        <span class="mono">Spent maintaining setup manually</span>
+      </div>
+    </article>
+
+    <article class="card card--after">
+      <div class="eyebrow"><span class="eyebrow__logo"><img src="assets/img/gaia-logo.png" alt=""></span><span class="mono">With Gaia</span></div>
+      <h3>Your setup gets better with every fix you approve.</h3>
+      <ul>
+        <li><img src="assets/img/after-check.svg" alt="">Gaia checks your setup when you ask, or on a Routine</li>
+        <li><img src="assets/img/after-check.svg" alt="">Ask, and Gaia drafts the fix for any conflict</li>
+        <li><img src="assets/img/after-check.svg" alt="">Every draft waits for your approval</li>
+        <li><img src="assets/img/after-check.svg" alt="">Routines keep an eye on the numbers you care about</li>
+        <li><img src="assets/img/after-check.svg" alt="">AI Ops know-how built into Gorgias</li>
+      </ul>
+      <div class="stat">
+        <strong>15 min / wk</strong>
+        <span class="mono">Approve drafts. Done.</span>
+      </div>
+      <div class="flower" aria-hidden="true"><img src="assets/img/with-gaia-flower.png" alt=""></div>
+    </article>
+  </div>
+</section>
+    </div>
+    <div class="mcp rv rv--card" style="--i:2">
+      <div class="mcp__content">
+        <span class="tag"><i></i><span class="mono">Built on Gorgias</span></span>
+        <h3 class="h4">On day one, Gaia already knows ecommerce support.</h3>
+      </div>
+      <p class="mcp__text">Gaia learns from the largest ecommerce-support dataset on Shopify, so it brings what’s worked across thousands of brands to your account. It also learns from what you approve, edit, and reject, so every draft fits your brand better than the last.</p>
+      <img class="mcp__orbit" src="assets/img/orbit-card.svg" alt="">
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TESTIMONIAL ============================== -->
+<section class="section testimonial" data-reveal>
+  <div class="container">
+    <div class="testimonial__photo rv rv--card" style="--i:0"><img src="assets/img/nicole-parker.png" alt="Nicole Parker"></div>
+    <div class="testimonial__body">
+      <p class="h5 rv" style="--i:1">Gaia completely transformed how we manage our knowledge base. We had it audit our existing content. It flagged duplications and identified missing information. Within minutes it generated a detailed, ready to use draft. All I had to do was review, test, and click publish.</p>
+      <div class="testimonial__who rv" style="--i:2"><b>Nicole Parker</b><span class="mono">Senior Manager of Customer Service at Bare Necessities</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== GAIA HUB ============================== -->
+<section class="section apps" id="hub" data-reveal>
+  <div class="shead">
+    <span class="tag rv" style="--i:0"><i></i><span class="mono">New: Gaia Hub</span></span>
+    <h2 class="h3 rv" style="--i:1">Start your day with a question.</h2>
+    <p class="lead rv" style="--i:2">Gaia Hub is the new front door to Gorgias. See how your account is doing at a glance, then ask Gaia what moved, what’s slipping, or what to fix first.</p>
+  </div>
+  <div class="apps__hero">
+    <img class="bg" src="assets/img/spring-bg.jpg" alt="">
+    <div class="app rv rv--card" style="--i:3">
+      <div class="app__nav"><img src="assets/img/app-sidebar.png" alt=""></div>
+      <div class="app__content">
+        <div class="hub__in">
+          <div class="hub__metrics">
+            <div class="metric rv" style="--i:5"><span class="lbl">Automation rate</span><span class="val">36% <span class="delta delta--up"><img src="assets/img/icon-trend-up.svg" alt="">5%</span></span></div>
+            <div class="metric rv" style="--i:6"><span class="lbl">Cost saved</span><span class="val">$1,923.30 <span class="delta delta--up"><img src="assets/img/icon-trend-up.svg" alt="">10%</span></span></div>
+            <div class="metric rv" style="--i:7"><span class="lbl">Average CSAT</span><span class="val">4.1 <span class="delta delta--down"><img src="assets/img/icon-trend-down.svg" alt="">2%</span></span></div>
+          </div>
+          <div class="hub__welcome rv" style="--i:8"><span class="w1">Welcome back, Sophie!</span><span class="w2">Let’s finish your setup</span></div>
+          <div class="hub__ask rv" style="--i:9">
+            <div class="ginput"><img src="assets/img/gaia-icon.png" alt="">Ask Gaia...<span class="sp"></span><img class="ic" src="assets/img/plus-sm.svg" alt=""><img class="ic" src="assets/img/send-sm.svg" alt=""></div>
+            <div class="hub__chips"><span class="chip">Why did handovers go up this week?</span><span class="chip">Which channel dropped the most?</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="acards">
+      <div class="acard rv rv--card" style="--i:4"><img src="assets/img/fi-annotation.svg" alt=""><div><h3>Ask in plain language</h3><p>Automation rate, handovers, a Skill that stopped matching. Ask the way you’d ask your ops lead.</p></div></div>
+      <div class="acard rv rv--card" style="--i:5"><img src="assets/img/fi-mail.svg" alt=""><div><h3>Start from a suggestion</h3><p>Conversation starters point you to the most useful next question for your account.</p></div></div>
+      <div class="acard rv rv--card" style="--i:6"><img src="assets/img/fi-chart.svg" alt=""><div><h3>Pick the numbers you care about</h3><p>Choose the metrics that sit above the question, so you can see what moved and ask why.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== CONVERSATION (scroll-driven) ============================== -->
+<div class="cs" id="conversation">
+<div class="track" id="track">
+  <section class="stage" id="stage" data-step="1" aria-label="Now the whole thing is a conversation">
+    <div class="canvas" id="canvas">
+
+      <!-- Header -->
+      <div class="abs header">
+        <div class="tag"><i></i><span class="mono">Also new</span></div>
+        <h1>Now the whole thing is a conversation.</h1>
+        <p>Setting up Gaia was already a conversation. Now running it is too.</p>
+      </div>
+
+      <div class="abs flower flower-1" aria-hidden="true"><img src="assets/img/flower-1.png" alt=""></div>
+
+      <!-- Routines: left column -->
+      <div class="abs col col-routines" id="routinesCol">
+        <div class="tag rise" style="--i:0"><i></i><span class="mono">Routines</span></div>
+        <h2 class="rise" style="--i:1">Ask once. Get the answer every week.</h2>
+        <p class="copy rise" style="--i:2">Write what you want to know the way you’d say it:</p>
+        <div class="chip-slot"></div>
+        <p class="copy rise" style="--i:3">Pick daily or weekly. Gaia runs it on schedule and has the answer waiting for you in Gorgias. Start from a template or write your own.</p>
+      </div>
+
+      <!-- Routines: report + schedule -->
+      <div class="abs cards" id="cards">
+        <div class="card rise" style="--i:2">
+          <div class="row lbl">Report</div>
+          <div class="summary"><b>5 knowledge gaps</b><span>Sep 14–20 · 412 conversations</span></div>
+          <div class="divider"></div>
+          <div class="topics">
+            <div class="topic" style="--i:0"><div class="head">Refund status<span>142</span></div><div class="trackbar"><div class="fill" style="--w:248px"></div></div></div>
+            <div class="topic" style="--i:1"><div class="head">Order not received<span>98</span></div><div class="trackbar"><div class="fill" style="--w:171px"></div></div></div>
+            <div class="topic" style="--i:2"><div class="head">Change delivery address<span>71</span></div><div class="trackbar"><div class="fill" style="--w:124px"></div></div></div>
+            <div class="topic" style="--i:3"><div class="head">Discount code failing<span>54</span></div><div class="trackbar"><div class="fill" style="--w:94px"></div></div></div>
+            <div class="topic" style="--i:4"><div class="head">Cancel subscription<span>47</span></div><div class="trackbar"><div class="fill" style="--w:82px"></div></div></div>
+          </div>
+          <div class="footer"></div>
+        </div>
+        <div class="card pop rise" style="--i:3">
+          <div class="row lbl">Next run</div>
+          <div class="val">in 6d 21h</div>
+          <div class="row lbl" style="margin-top:12px">Instructions</div>
+          <div class="txt">Missing knowledge matches report.</div>
+          <div class="sub">Every Monday, 08:00 AM</div>
+          <div class="divider"></div>
+          <div class="row lbl hist">History <span class="qty">8</span></div>
+          <div class="item">Sep 27, 8:00 AM</div>
+          <div class="item sel">Sep 20, 8:00 AM <img src="assets/img/chevron-right.svg" alt=""></div>
+          <div class="item">Sep 13, 8:00 AM</div>
+          <div class="more">Show more</div>
+        </div>
+      </div>
+
+      <!-- Input A: centred under the header, then becomes the chip in the left column -->
+      <div class="abs input" id="inputA">
+        <img src="assets/img/gaia-icon.png" alt="">
+        <span class="text"><span class="ph">Ask Gaia...</span><span class="typed"></span><span class="caret"></span></span>
+      </div>
+
+      <div class="abs flower flower-2" aria-hidden="true"><img src="assets/img/flower-2.png" alt=""></div>
+
+      <!-- Input B: centred below the Routines block, then grows into the chat -->
+      <div class="abs input" id="inputB">
+        <img src="assets/img/gaia-icon.png" alt="">
+        <span class="text"><span class="ph">Ask Gaia...</span><span class="typed"></span><span class="caret"></span></span>
+      </div>
+
+      <!-- Chat window -->
+      <div class="abs chat" id="chat">
+        <div class="hd">
+          <div class="title">Refund delays this week <img src="assets/img/chevron-down.svg" alt=""></div>
+          <div class="ctrl">
+            <div class="ibtn"><img src="assets/img/kebab.svg" alt=""></div>
+            <div class="ibtn" id="shareBtn"><img src="assets/img/share.svg" alt=""></div>
+            <div class="ibtn"><img src="assets/img/expand.svg" alt=""></div>
+            <div class="ibtn"><img src="assets/img/close.svg" alt=""></div>
+          </div>
+        </div>
+        <div class="body" id="chatBody">
+          <div class="msg me rise" style="--i:0;--d:200ms">Why are refunds slow this week?</div>
+          <div class="msg rise" style="--i:1;--d:200ms">Refund tickets are up 38% since Monday. Let me check what changed.</div>
+          <div class="msg me rise" style="--i:2;--d:200ms">What is causing it?</div>
+          <div class="msg rise" style="--i:3;--d:200ms">Most of the delay comes from orders paid with Klarna. The provider added a manual review step on Sep 10, which holds refunds for 3 to 5 days before they clear. 41 of the 52 open refund tickets fit this pattern. The rest are standard exchanges still inside the normal window.</div>
+        </div>
+      </div>
+
+      <div class="abs cursor" id="cursor" aria-hidden="true"><img src="assets/img/hand.svg" alt=""></div>
+
+      <!-- Share modal -->
+      <div class="abs modal" id="modal">
+        <div class="mh"><b>Share chat</b><img src="assets/img/close-modal.svg" alt=""></div>
+        <div class="desc">Any messages you add after sharing stay private.</div>
+        <div class="field"><span>https://gorgias.gaia/share/791eb7ff-863b-403c-95a3-e95aed54bf63</span><div class="btn"><img src="assets/img/copy.svg" alt="">Copy link</div></div>
+        <img class="abs blink" src="assets/img/blink.svg" alt="">
+      </div>
+
+      <!-- Shared chats: right column -->
+      <div class="abs col col-shared" id="sharedCol">
+        <div class="tag rise" style="--i:0;--d:1200ms"><i></i><span class="mono">Shared Chats</span></div>
+        <h2 class="rise" style="--i:1;--d:1200ms">Share the whole conversation with a link.</h2>
+        <p class="copy rise" style="--i:2;--d:1200ms">Worked something out with Gaia? Copy the link. Your teammate sees the full conversation: what you asked, what Gaia checked, and what it found. The link stays read-only and inside your account. Your team learns what a good question looks like by reading one.</p>
+      </div>
+
+    </div>
+  </section>
+</div>
+</div>
+
+<!-- ============================== SHARED CHATS ============================== -->
+<section class="section apps" id="shared" data-reveal>
+  <div class="shead">
+    <span class="tag rv" style="--i:0"><i></i><span class="mono">New: Gaia in the helpdesk</span></span>
+    <h2 class="h3 rv" style="--i:1">Now everyone on your team<br>can ask Gaia.</h2>
+    <p class="lead rv" style="--i:2">Gaia is open to every role, with the same permissions each person already has in Gorgias. Agents can summarize a ticket, look up a customer, or draft a reply without leaving the conversation.</p>
+  </div>
+  <div class="apps__hero">
+    <img class="bg" src="assets/img/shared-bg.jpg" alt="">
+    <div class="app rv rv--card" style="--i:3" id="sharedApp">
+      <div class="app__nav"><img src="assets/img/app-sidebar.png" alt=""></div>
+      <div class="app__content">
+        <div class="sc__hd"><b>Refund delays this week</b><span class="sc__pager"><img src="assets/img/chevron-left.svg" alt="">1 of 7<img src="assets/img/chevron-right.svg" alt=""></span></div>
+        <div class="sc__body">
+          <div class="sc__row sc__row--me sc__msg"><span class="bubble bubble--a">Why are refunds slow this week?</span><img src="assets/img/avatar-ag.png" alt=""></div>
+          <div class="sc__msg"><p class="sc__ai">Refund tickets are up 38% since Monday. Most of the delay comes from orders paid with Klarna: the provider added a manual review step on Sep 10 that holds refunds for 3 to 5 days. 41 of the 52 open refund tickets fit this pattern.</p><div class="sc__meta"><span>Payment history</span><span>18s</span></div></div>
+          <div class="sc__row sc__row--me sc__msg"><span class="bubble bubble--b">Good to know. Can you send us this refund breakdown every Monday morning?</span><img src="assets/img/avatar-photo.png" alt=""></div>
+          <div class="sc__msg"><p class="sc__ai">Done. Routine created: Refund delays report, every Monday at 8:00 AM, posted to this chat. First run is Sep 22.</p><div class="sc__meta"><span>Custom routine built</span><span>9s</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="acards">
+      <div class="acard rv rv--card" style="--i:4"><img src="assets/img/fi-agent.svg" alt=""><div><h3>Agents</h3><p>Summarize tickets, look up customers, draft replies, and apply macros, within their Gorgias permissions.</p></div></div>
+      <div class="acard rv rv--card" style="--i:5"><img src="assets/img/fi-folder.svg" alt=""><div><h3>Admins and leads</h3><p>Everything agents can do, plus setting up and coaching AI Agent and creating Routines.</p></div></div>
+      <div class="acard rv rv--card" style="--i:6"><img src="assets/img/fi-chats.svg" alt=""><div><h3>Everyone</h3><p>Starts in Gaia Hub and can read the chats teammates share.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== DRAFTS ============================== -->
+<section class="section drafts" data-reveal>
+  <div class="container">
+    <div class="shead" style="gap:32px">
+      <div class="drafts__marks rv" style="--i:0"><img src="assets/img/drafts-check.svg" alt=""><img src="assets/img/drafts-x.svg" alt=""></div>
+      <div class="shead">
+        <span class="tag rv" style="--i:1"><i></i><span class="mono">You in control</span></span>
+        <h2 class="h3 rv" style="--i:2">Gaia drafts. You approve.</h2>
+        <p class="lead rv" style="--i:3">Gaia running on a schedule doesn’t change who decides. It reports what it finds, drafts a fix only when you ask, and nothing reaches your live setup until you approve it.</p>
+      </div>
+    </div>
+    <div class="fcards">
+      <div class="fcard rv rv--card" style="--i:4"><div class="fi"><img src="assets/img/icon-target-dark.svg" alt=""></div><div><h3>Routines read and report.</h3><p>Surfaces the fixes that move automation most.</p></div></div>
+      <div class="fcard rv rv--card" style="--i:5"><div class="fi"><img src="assets/img/icon-annotation-alert.svg" alt=""></div><div><h3>Shared Chats are read-only.</h3><p>Writes the change in your voice, grounded in real tickets. You review.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== FAQ ============================== -->
+<section class="section faq" data-reveal>
+  <div class="container">
+    <div class="shead">
+      <span class="tag rv" style="--i:0"><i></i><span class="mono">FAQs</span></span>
+      <h2 class="h2 rv" style="--i:1">Quick answers</h2>
+    </div>
+    <div class="faq__list rv" style="--i:2" id="faq"></div>
+  </div>
+</section>
+
+<!-- ============================== FOOTER placeholder ============================== -->
+<footer class="site-footer"><span class="mono">Footer</span></footer>
+
+<script src="app.js"></script>
+<script>
+/* ---- Before/After section (from the standalone prototype) ---- */
+
+(function () {
+  const section = document.getElementById('ba');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Toggle ---------- */
+  const toggle = section.querySelector('.toggle');
+  const thumb = toggle.querySelector('.toggle__thumb');
+  function moveThumb(b, instant) {
+    if (instant) thumb.style.transition = 'none';
+    thumb.style.width = b.offsetWidth + 'px';
+    thumb.style.transform = `translateX(${b.offsetLeft - 2}px)`;
+    if (instant) { void thumb.offsetWidth; thumb.style.transition = ''; }
+  }
+  // Stagger index for the load-in: each row of the active card rises 55ms after the one before.
+  section.querySelectorAll('.card').forEach(card => {
+    card.querySelectorAll('.eyebrow, h3, li, .stat').forEach((el, i) => el.style.setProperty('--i', i));
+  });
+  function enter(state) {
+    const targets = [section.querySelector('.card--' + state), section.querySelector('.scene--' + state)];
+    for (const el of targets) { el.classList.remove('is-entering'); void el.offsetWidth; el.classList.add('is-entering'); }
+    clearTimeout(enter.t);
+    enter.t = setTimeout(() => targets.forEach(el => el.classList.remove('is-entering')), 1400);
+  }
+  toggle.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-set]'); if (!b) return;
+    if (section.dataset.state === b.dataset.set) return;
+    section.dataset.state = b.dataset.set;
+    toggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    moveThumb(b, false);
+    enter(b.dataset.set);
+  });
+  moveThumb(toggle.querySelector('button[aria-pressed="true"]'), true);
+  document.fonts && document.fonts.ready.then(() => moveThumb(toggle.querySelector('button[aria-pressed="true"]'), true));
+
+  const density = 2;   // locked in: max density, particles over everything
+
+  /* ---------- Shared canvas plumbing ---------- */
+  function makeLayer(canvas, setup, draw) {
+    const ctx = canvas.getContext('2d');
+    let w = 0, h = 0, dpr = 1, items = [], last = 0;
+    function resize() {
+      const r = canvas.getBoundingClientRect();
+      dpr = Math.min(devicePixelRatio || 1, 2);
+      w = r.width; h = r.height;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      items = setup(w, h, density);
+    }
+    function frame(t) {
+      const dt = Math.min((t - last) / 1000, 0.05); last = t;
+      ctx.clearRect(0, 0, w, h);
+      draw(ctx, items, w, h, dt, t / 1000);
+    }
+    return { resize, frame, reseed: () => { items = setup(w, h, density); } };
+  }
+
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  /* ---------- Rain: thin white streaks, slight lean, three depths ---------- */
+  const rain = makeLayer(document.getElementById('rain'),
+    (w, h, d) => {
+      const n = Math.round((w * h) / 9000 * d);       // ~125 drops at 1440x780
+      return Array.from({ length: n }, () => {
+        const depth = Math.random();                   // 0 far, 1 near
+        return {
+          x: rnd(-w * 0.1, w), y: rnd(-h, h),
+          len: 10 + depth * 16,
+          speed: 520 + depth * 480,                    // px per second
+          lean: 0.12 + depth * 0.06,                   // horizontal drift per unit fall
+          alpha: 0.10 + depth * 0.28,
+          width: 0.8 + depth * 0.6
+        };
+      });
+    },
+    (ctx, drops, w, h, dt) => {
+      ctx.lineCap = 'round';
+      for (const p of drops) {
+        p.y += p.speed * dt; p.x -= p.speed * p.lean * dt;
+        if (p.y > h + p.len) { p.y = -p.len - rnd(0, h * 0.3); p.x = rnd(0, w * 1.1); }
+        ctx.strokeStyle = `rgba(255,255,255,${p.alpha})`;
+        ctx.lineWidth = p.width;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x + p.len * p.lean, p.y - p.len);
+        ctx.stroke();
+      }
+    });
+
+  /* ---------- Petals and pollen: few, slow, swaying ---------- */
+  const PETAL_COLORS = ['251,107,75', '240,150,140', '232,120,120', '255,170,150'];
+  function petalPath(ctx, s) {
+    // A single petal: two curves meeting at both tips.
+    ctx.beginPath();
+    ctx.moveTo(0, -s);
+    ctx.bezierCurveTo(s * 0.9, -s * 0.6, s * 0.9, s * 0.6, 0, s);
+    ctx.bezierCurveTo(-s * 0.9, s * 0.6, -s * 0.9, -s * 0.6, 0, -s);
+    ctx.closePath();
+  }
+  // Near-camera petals: drawn once at 28px, then scaled up 2-3x. The upscale is what blurs them,
+  // so it works in every browser without canvas filters.
+  const spriteCache = new Map();
+  function petalSprite(color) {
+    if (spriteCache.has(color)) return spriteCache.get(color);
+    const c = document.createElement('canvas'); c.width = c.height = 28;
+    const x = c.getContext('2d');
+    x.translate(14, 14); x.fillStyle = `rgb(${color})`;
+    x.shadowColor = `rgb(${color})`; x.shadowBlur = 4;
+    petalPath(x, 10); x.fill();
+    spriteCache.set(color, c); return c;
+  }
+  const petals = makeLayer(document.getElementById('petals'),
+    (w, h, d) => {
+      const np = Math.round(Math.max(6, (w / 1440) * 11 * d));
+      const nd = Math.round(Math.max(12, (w / 1440) * 28 * d));
+      const nn = Math.round(Math.max(2, (w / 1440) * 3 * d));
+      const list = [];
+      for (let i = 0; i < nn; i++) list.push({
+        kind: 'near',
+        x: rnd(0, w), y: rnd(-h * 0.4, h),
+        size: rnd(24, 46),
+        vy: rnd(38, 70),                                // closer, so it moves faster (parallax)
+        sway: rnd(60, 120), swayF: rnd(0.35, 0.65), phase: rnd(0, 6.28),
+        rot: rnd(0, 6.28), rotV: rnd(-0.9, 0.9),
+        alpha: rnd(0.16, 0.32),
+        color: PETAL_COLORS[(i + 1) % PETAL_COLORS.length]
+      });
+      for (let i = 0; i < np; i++) list.push({
+        kind: 'petal',
+        x: rnd(0, w), y: rnd(-h * 0.2, h),
+        size: rnd(7, 15),
+        vy: rnd(14, 28),                                // fall speed px/s
+        sway: rnd(18, 38), swayF: rnd(0.25, 0.5), phase: rnd(0, 6.28),
+        rot: rnd(0, 6.28), rotV: rnd(-0.6, 0.6),
+        alpha: rnd(0.22, 0.48),
+        blur: rnd(1.5, 4),                              // soft edges, like the out-of-focus photo
+        color: PETAL_COLORS[i % PETAL_COLORS.length]
+      });
+      for (let i = 0; i < nd; i++) list.push({
+        kind: 'pollen',
+        x: rnd(0, w), y: rnd(0, h),
+        size: rnd(1.2, 2.6),
+        vy: rnd(-10, -3),                               // pollen drifts up
+        sway: rnd(6, 16), swayF: rnd(0.3, 0.7), phase: rnd(0, 6.28),
+        alpha: rnd(0.35, 0.7)
+      });
+      return list;
+    },
+    (ctx, list, w, h, dt, t) => {
+      for (const p of list) {
+        p.y += p.vy * dt;
+        const x = p.x + Math.sin(t * p.swayF + p.phase) * p.sway;
+        if (p.kind === 'near') {
+          p.rot += p.rotV * dt;
+          if (p.y > h + p.size * 2) { p.y = -p.size * 2 - rnd(0, h * 0.5); p.x = rnd(0, w); }
+          ctx.save();
+          ctx.translate(x, p.y); ctx.rotate(p.rot);
+          ctx.globalAlpha = p.alpha;
+          ctx.drawImage(petalSprite(p.color), -p.size, -p.size, p.size * 2, p.size * 2);
+          ctx.restore();
+        } else if (p.kind === 'petal') {
+          p.rot += p.rotV * dt;
+          if (p.y > h + 30) { p.y = -30; p.x = rnd(0, w); }
+          ctx.save();
+          ctx.translate(x, p.y); ctx.rotate(p.rot);
+          ctx.fillStyle = `rgba(${p.color},${p.alpha})`;
+          ctx.shadowColor = `rgba(${p.color},${p.alpha})`; ctx.shadowBlur = p.blur;
+          petalPath(ctx, p.size); ctx.fill();
+          ctx.restore();
+        } else {
+          if (p.y < -10) { p.y = h + 10; p.x = rnd(0, w); }
+          const twinkle = 0.75 + 0.25 * Math.sin(t * 2 + p.phase);
+          ctx.fillStyle = `rgba(255,246,214,${p.alpha * twinkle})`;
+          ctx.beginPath(); ctx.arc(x, p.y, p.size, 0, 6.28); ctx.fill();
+        }
+      }
+    });
+
+  /* ---------- Wet glass: DOM drops with backdrop-filter, sticking then sliding ---------- */
+  const glass = (() => {
+    const root = document.getElementById('glass');
+    let w = 0, h = 0, drops = [];
+    function spawn(d, fresh) {
+      d.size = Math.round(6 + Math.pow(Math.random(), 1.6) * 32);   // 6-38px, skewed small
+      d.x = rnd(w * 0.02, w * 0.98);
+      d.y = fresh ? rnd(-20, h * 0.85) : rnd(-30, h * 0.35);
+      d.y0 = d.y; d.vy = 0; d.vx = 0;
+      d.grow = 0;                                                 // 0..1, settles in over ~1s
+      d.wait = rnd(1, 5);                                         // every drop slides within 1-5s
+      d.sliding = false;
+      d.el.classList.remove('is-sliding');
+      d.trail.style.transform = 'scaleY(0)';
+      d.el.style.width = d.el.style.height = d.size + 'px';
+    }
+    function build() {
+      root.textContent = '';
+      const n = Math.round((w / 1440) * 10 * density);
+      drops = Array.from({ length: n }, () => {
+        const el = document.createElement('div'); el.className = 'drop';
+        const trail = document.createElement('div'); trail.className = 'trail';
+        root.appendChild(trail); root.appendChild(el);
+        const d = { el, trail }; spawn(d, true); return d;
+      });
+    }
+    function resize() { const r = root.getBoundingClientRect(); w = r.width; h = r.height; build(); }
+    function frame(dt) {
+      for (const d of drops) {
+        if (!d.sliding) {
+          d.grow = Math.min(1, d.grow + dt);
+          d.wait -= dt;
+          if (d.wait <= 0) { d.sliding = true; d.el.classList.add('is-sliding'); }
+        } else {
+          d.vy = Math.min(d.vy + 120 * dt * (d.size / 12), 90 + d.size * 5);   // small drops crawl, big ones run
+          d.vx += (rnd(-1, 1) * 25 - d.vx * 2) * dt;               // small wander, damped
+          d.y += d.vy * dt; d.x += d.vx * dt;
+          const len = Math.min(Math.max(0, d.y - d.y0), 40 + d.size * 3);   // short wet track behind the drop
+          d.trail.style.transform = `translate(${d.x - 1}px, ${d.y - len}px) scaleY(${len})`;
+          if (d.y > h + 30) spawn(d, false);
+        }
+        const sc = 0.6 + 0.4 * d.grow, sy = d.sliding ? 1.25 : 1;
+        d.el.style.transform = `translate(${d.x - d.size / 2}px, ${d.y - d.size / 2}px) scale(${sc}, ${sc * sy})`;
+      }
+    }
+    return { resize, frame, reseed: build };
+  })();
+
+  /* ---------- Run loop: only the visible scene, only while on screen ---------- */
+  let visible = true, raf = 0;
+  function loop(t) {
+    raf = 0;
+    if (!visible || document.hidden) return;
+    rain.frame(t); petals.frame(t);   // both, so the crossfade never shows a stale frame
+    glass.frame(Math.min((t - (loop.last || t)) / 1000, 0.05)); loop.last = t;
+    raf = requestAnimationFrame(loop);
+  }
+  function start() { if (!raf && !reduced) raf = requestAnimationFrame(loop); }
+  function resizeAll() { rain.resize(); petals.resize(); glass.resize(); if (reduced) { rain.frame(0); petals.frame(0); glass.frame(0); } }
+
+  new ResizeObserver(resizeAll).observe(section);
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; start(); }, { threshold: 0.05 }).observe(section);
+  document.addEventListener('visibilitychange', start);
+  section.addEventListener('transitionend', start);
+  toggle.addEventListener('click', start);
+  resizeAll(); start();
+})();
+
+</script>
+<script>
+/* ---- Conversation scroll section (from the standalone prototype) ---- */
+
+(function () {
+  const STEPS = 7;
+  const CANVAS_W = 1440, CANVAS_H = 1668;
+  const SEGMENT = 520;                      // scroll distance per step
+  const track = document.getElementById('track');
+  const stage = document.getElementById('stage');
+  const canvas = document.getElementById('canvas');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // What each step needs on screen (canvas y range). The stage centres it.
+  const FOCUS = { 1:[160,412], 2:[160,412], 3:[160,880], 4:[420,1100], 5:[420,1100], 6:[760,1460], 7:[976,1508] };
+
+  let vw = 0, vh = 0, scale = 1, step = 0;
+  function layout() {
+    vw = innerWidth; vh = innerHeight;
+    scale = Math.min(1, vw / CANVAS_W);
+    track.style.height = (vh + STEPS * SEGMENT) + 'px';          // one extra segment so step 7 holds before unpinning
+    render();
+  }
+  function targetOffset(s) {
+    const [a, b] = FOCUS[s];
+    const centre = (a + b) / 2;
+    const max = Math.max(0, CANVAS_H - vh / scale);
+    return Math.min(max, Math.max(0, centre - (vh / scale) / 2));
+  }
+  const smooth = (t) => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+
+  let offset = 0, targetOff = 0, raf = 0;
+  function render() {
+    const y = Math.min(Math.max(0, -track.getBoundingClientRect().top), STEPS * SEGMENT);
+    const seg = Math.min(STEPS - 1, Math.floor(y / SEGMENT));      // 0..6
+    const s = seg + 1;                                              // 1..7
+    // Glide to the new offset over the first half of each segment, then hold.
+    const t = smooth((y - seg * SEGMENT) / (SEGMENT * 0.5));
+    targetOff = s === 1 ? targetOffset(1) : targetOffset(s - 1) + (targetOffset(s) - targetOffset(s - 1)) * t;
+    if (s !== step) setStep(s);
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  // The canvas eases toward the target every frame, so fast or jumpy scrolling never snaps it.
+  function tick() {
+    raf = 0;
+    const d = targetOff - offset;
+    offset = Math.abs(d) < 0.05 ? targetOff : offset + d * 0.14;
+    canvas.style.transform = `translate(${(vw - CANVAS_W * scale) / 2}px, ${-offset * scale}px) scale(${scale})`;
+    if (offset !== targetOff) raf = requestAnimationFrame(tick);
+  }
+
+  /* ---------- Steps ---------- */
+  const inputA = document.getElementById('inputA'), inputB = document.getElementById('inputB');
+  const TEXT_A = 'List this week’s busiest topics that have no matching knowledge.';
+  const TEXT_B = 'Why are refunds slow this week?';
+  const on = (id, v) => document.getElementById(id).classList.toggle('on', v);
+
+  function setStep(s) {
+    const prev = step; step = s;
+    stage.dataset.step = s;
+    // Input A text
+    if (s === 1) clearText(inputA);
+    else if (s === 2 && prev < 2) typeText(inputA, TEXT_A);
+    else if (s >= 2) setText(inputA, TEXT_A);
+    // Input B text
+    if (s <= 4) clearText(inputB);
+    else if (s === 5 && prev < 5) typeText(inputB, TEXT_B);
+    else setText(inputB, TEXT_B);
+    // Reveal groups
+    on('routinesCol', s >= 3); on('cards', s >= 3);
+    on('chatBody', s >= 6);
+    on('sharedCol', s >= 7);
+    if (s === 7 && prev === 6) shareSequence(); else if (s !== 7) cancelShare();
+  }
+
+  /* ---------- Typing ---------- */
+  const typers = new WeakMap();
+  function clearText(el) { cancelType(el); el.classList.remove('typing', 'done'); el.querySelector('.typed').textContent = ''; }
+  function setText(el, text) { cancelType(el); el.classList.remove('typing'); el.classList.add('done'); el.querySelector('.typed').textContent = text; }
+  function cancelType(el) { const t = typers.get(el); if (t) { clearTimeout(t); typers.delete(el); } }
+  function typeText(el, text) {
+    if (reduced) return setText(el, text);
+    cancelType(el);
+    const out = el.querySelector('.typed'); out.textContent = '';
+    el.classList.remove('done'); el.classList.add('typing');
+    let i = 0;
+    const tick = () => {
+      out.textContent = text.slice(0, ++i);
+      if (i < text.length) typers.set(el, setTimeout(tick, 18 + Math.random() * 30 + (text[i - 1] === ' ' ? 20 : 0)));
+      else typers.set(el, setTimeout(() => { el.classList.remove('typing'); el.classList.add('done'); typers.delete(el); }, 500));
+    };
+    typers.set(el, setTimeout(tick, 220));
+  }
+
+  /* ---------- Step 7: cursor goes to the share icon, clicks, modal opens ---------- */
+  const cursor = document.getElementById('cursor'), shareBtn = document.getElementById('shareBtn');
+  let shareTimers = [];
+  const later = (fn, ms) => shareTimers.push(setTimeout(fn, ms));
+  function shareSequence() {
+    cancelShare();
+    if (reduced) return;
+    // Share icon centre in canvas space while the chat is still at x=530 (the click happens before it slides).
+    const bx = 530 + 289, by = 1008 + 26;
+    cursor.style.transition = 'none';
+    cursor.style.transform = `translate(${bx + 90}px, ${by + 160}px)`;
+    void cursor.offsetWidth;
+    cursor.style.transition = 'transform .75s cubic-bezier(.3,.7,.2,1), opacity .3s';
+    later(() => { cursor.classList.add('show'); cursor.style.transform = `translate(${bx - 6}px, ${by + 2}px)`; }, 60);
+    later(() => shareBtn.classList.add('hover'), 700);
+    later(() => { shareBtn.classList.add('press'); cursor.style.transform = `translate(${bx - 6}px, ${by + 2}px) scale(.9)`; }, 900);
+    later(() => { shareBtn.classList.remove('press'); cursor.style.transform = `translate(${bx - 6}px, ${by + 2}px)`; }, 1020);
+    later(() => { shareBtn.classList.remove('hover'); cursor.classList.remove('show'); }, 1500);
+  }
+  function cancelShare() {
+    shareTimers.forEach(clearTimeout); shareTimers = [];
+    cursor.classList.remove('show'); shareBtn.classList.remove('hover', 'press');
+  }
+
+  addEventListener('scroll', render, { passive: true });
+  addEventListener('resize', layout);
+  layout(); offset = targetOff; tick();
+})();
+
+</script>
+</body>
+</html>

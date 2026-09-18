@@ -1,0 +1,11 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="75.0938" height="64" viewBox="0 0 75.0938 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Check">
+<path id="Vector" d="M62.7081 18.7081L30.7081 50.7081C30.6152 50.801 30.5049 50.8748 30.3835 50.9251C30.2621 50.9754 30.132 51.0013 30.0006 51.0013C29.8692 51.0013 29.739 50.9754 29.6177 50.9251C29.4963 50.8748 29.386 50.801 29.2931 50.7081L15.2931 36.7081C15.1054 36.5204 15 36.2659 15 36.0006C15 35.7352 15.1055 35.4807 15.2931 35.2931C15.4807 35.1054 15.7352 35 16.0006 35C16.266 35 16.5205 35.1054 16.7081 35.2931L30.0006 48.5856L61.2931 17.2931C61.4807 17.1054 61.7352 17 62.0006 17C62.266 17 62.5205 17.1054 62.7081 17.2931C62.8957 17.4807 63.0011 17.7352 63.0011 18.0006C63.0011 18.2659 62.8957 18.5204 62.7081 18.7081Z" fill="#474543"/>
+<g id="selection">
+<path id="Vector 12" d="M1 14.6481V1.22266H14.4254" stroke="#C0BBB5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector 13" d="M74.0938 14.6481V1.22266H60.6684" stroke="#C0BBB5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector 14" d="M1 48.9535V62.3789H14.4254" stroke="#C0BBB5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector 15" d="M74.0938 48.9535V62.3789H60.6684" stroke="#C0BBB5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
+</svg>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gaia — Make your AI Agent better every day</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+/* Tokens the embedded sections expect */
+:root { --fade: 450ms; --card-bg: rgba(252,250,248,.8); --content-tertiary: #5f5c59; --input-placeholder: #8e8985; --selected: rgba(63,60,57,.10); }
+/* ---- Before/After section (scoped) ---- */
+<!-- BA_CSS -->
+/* ---- Conversation scroll section (scoped) ---- */
+<!-- CS_CSS -->
+</style>
+</head>
+<body>
+
+<!-- ============================== NAV ============================== -->
+<header class="nav">
+  <div class="nav__in">
+    <div class="nav__left">
+      <a class="nav__logo" href="#"><img src="assets/img/gorgias-lockup.svg" alt="Gorgias"></a>
+      <nav class="nav__menu">
+        <a class="nav__item" href="#">Product <img src="assets/img/caret-down.svg" alt=""></a>
+        <a class="nav__item nav__item--on" href="#">Solutions <img src="assets/img/caret-down.svg" alt=""></a>
+        <a class="nav__item" href="#">Pricing</a>
+        <a class="nav__item" href="#">Integrations <img src="assets/img/caret-down.svg" alt=""></a>
+        <a class="nav__item" href="#">Resources <img src="assets/img/caret-down.svg" alt=""></a>
+      </nav>
+    </div>
+    <div class="nav__cta">
+      <a class="btn btn--secondary btn--sm" href="#">Book a demo</a>
+      <a class="btn btn--primary btn--sm" href="#">Book a demo</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============================== HERO ============================== -->
+<section class="hero" id="hero">
+  <div class="hero__orbit a" style="--i:0"><img src="assets/img/hero-left.svg" alt=""></div>
+  <div class="hero__in">
+    <div class="hero__top">
+      <div class="hero__badge a" style="--i:0">
+        <div class="hero__icon"><img src="assets/img/gaia-logo-lg.png" alt=""></div>
+        <span class="mono">Meet Gaia</span>
+      </div>
+      <h1 class="h2 a" style="--i:1">Make your AI Agent better every day with Gaia</h1>
+    </div>
+    <p class="lead a" style="--i:2">It finds what's holding your AI Agent back, drafts the fix, and ships on your approval.</p>
+    <div class="hero__cta a" style="--i:3">
+      <a class="btn btn--primary" href="#diagnose">See how it works</a>
+      <a class="btn btn--secondary" href="#">Try it live</a>
+    </div>
+  </div>
+  <div class="hero__flower a" style="--i:1"><img src="assets/img/hero-right.png" alt=""></div>
+</section>
+
+<!-- ============================== FEATURES (rotating) ============================== -->
+<section class="features">
+  <div class="marquee">
+    <div class="marquee__track" style="--dur: 36s">
+      <div class="pill">Ships on approval</div><div class="pill">No specialist needed</div><div class="pill">15-minute reviews</div><div class="pill">Drafts in your voice</div><div class="pill">Ships on approval</div><div class="pill">No specialist needed</div><div class="pill">15-minute reviews</div><div class="pill">Drafts in your voice</div>
+      <div class="pill">Ships on approval</div><div class="pill">No specialist needed</div><div class="pill">15-minute reviews</div><div class="pill">Drafts in your voice</div><div class="pill">Ships on approval</div><div class="pill">No specialist needed</div><div class="pill">15-minute reviews</div><div class="pill">Drafts in your voice</div>
+    </div>
+    <div class="marquee__fade"></div>
+  </div>
+</section>
+
+<!-- ============================== LOGO GRID (rotating behind the copy) ============================== -->
+<section class="logos">
+  <div class="logos__track" id="logosTrack"></div>
+  <div class="logos__copy">6,000+ brands used <span class="gl"><img src="assets/img/gaia-icon.png" alt="">Gaia in the last 30 days.</span></div>
+</section>
+
+<!-- ============================== YOUR SETUP ============================== -->
+<section class="section setup" data-reveal>
+  <div class="shead">
+    <span class="tag rv" style="--i:0"><i></i><span class="mono">Setup</span></span>
+    <h2 class="h3 rv" style="--i:1">Your setup, built from your own tickets.</h2>
+    <p class="lead rv" style="--i:2">Brief Gaia like you’d brief a new ops hire. It checks your ticket history, tells you what AI Agent can handle now and what needs more from you, and drafts the Skills when you ask.</p>
+  </div>
+  <div class="setup__img rv rv--card" style="--i:3"><img src="assets/img/your-setup@2x.jpg" alt="Gaia reviewing Skills in Gorgias"></div>
+</section>
+
+<!-- ============================== START WITH A SENTENCE (rotating) ============================== -->
+<section class="sentence" data-reveal>
+  <div class="container">
+    <div class="shead">
+      <span class="tag rv" style="--i:0"><i></i><span class="mono">Prompts</span></span>
+      <h2 class="h4 rv" style="--i:1">Start with a sentence.</h2>
+    </div>
+    <div class="marquee rv" style="--i:2">
+      <div class="marquee__track" style="--dur: 48s" id="sentenceTrack"></div>
+      <div class="marquee__fade"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== DIAGNOSE (shimmer) ============================== -->
+<section class="section diagnose" id="diagnose" data-reveal>
+  <div class="container">
+    <div class="shead">
+      <span class="tag rv" style="--i:0"><i></i><span class="mono">How Gaia works</span></span>
+      <h2 class="h3 rv" style="--i:1">Diagnose. Draft. <em>Ship</em>.</h2>
+      <p class="lead rv" style="--i:2">Every gap Gaia closes is a conversation AI Agent resolves, so your team doesn’t have to.</p>
+    </div>
+    <div class="dcards" id="dcards">
+      <div class="dcard rv rv--card" style="--i:3"><div class="fi"><img src="assets/img/icon-target.svg" alt=""></div><div><h3>Diagnoses</h3><p>Ask, and Gaia reads handovers, low-CSAT replies, and conflicting knowledge, then points to the gaps holding your automation back.</p></div></div>
+      <div class="dcard rv rv--card" style="--i:4"><div class="fi"><img src="assets/img/icon-pencil.svg" alt=""></div><div><h3>Drafts</h3><p>Say the word, and it writes the fix in your brand voice, based on your real tickets. Edit anything you want.</p></div></div>
+      <div class="dcard rv rv--card" style="--i:5"><div class="fi"><img src="assets/img/icon-send.svg" alt=""></div><div><h3>Ships</h3><p>Approve it, and Gaia publishes the change to your live setup. Until you do, nothing moves.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== BEFORE / AFTER ============================== -->
+<section class="section ba-section" data-reveal>
+  <div class="container">
+    <h2 class="h3 rv" style="--i:0">Tuning AI used to be someone’s whole job.<br>Now Gaia does the legwork.</h2>
+    <div class="ba-wrap rv rv--card" style="--i:1">
+<!-- BA_HTML -->
+    </div>
+    <div class="mcp rv rv--card" style="--i:2">
+      <div class="mcp__content">
+        <span class="tag"><i></i><span class="mono">Built on Gorgias</span></span>
+        <h3 class="h4">On day one, Gaia already knows ecommerce support.</h3>
+      </div>
+      <p class="mcp__text">Gaia learns from the largest ecommerce-support dataset on Shopify, so it brings what’s worked across thousands of brands to your account. It also learns from what you approve, edit, and reject, so every draft fits your brand better than the last.</p>
+      <img class="mcp__orbit" src="assets/img/orbit-card.svg" alt="">
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TESTIMONIAL ============================== -->
+<section class="section testimonial" data-reveal>
+  <div class="container">
+    <div class="testimonial__photo rv rv--card" style="--i:0"><img src="assets/img/nicole-parker.png" alt="Nicole Parker"></div>
+    <div class="testimonial__body">
+      <p class="h5 rv" style="--i:1">Gaia completely transformed how we manage our knowledge base. We had it audit our existing content. It flagged duplications and identified missing information. Within minutes it generated a detailed, ready to use draft. All I had to do was review, test, and click publish.</p>
+      <div class="testimonial__who rv" style="--i:2"><b>Nicole Parker</b><span class="mono">Senior Manager of Customer Service at Bare Necessities</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== GAIA HUB ============================== -->
+<section class="section apps" id="hub" data-reveal>
+  <div class="shead">
+    <span class="tag rv" style="--i:0"><i></i><span class="mono">New: Gaia Hub</span></span>
+    <h2 class="h3 rv" style="--i:1">Start your day with a question.</h2>
+    <p class="lead rv" style="--i:2">Gaia Hub is the new front door to Gorgias. See how your account is doing at a glance, then ask Gaia what moved, what’s slipping, or what to fix first.</p>
+  </div>
+  <div class="apps__hero">
+    <img class="bg" src="assets/img/spring-bg.jpg" alt="">
+    <div class="app rv rv--card" style="--i:3">
+      <div class="app__nav"><img src="assets/img/app-sidebar.png" alt=""></div>
+      <div class="app__content">
+        <div class="hub__in">
+          <div class="hub__metrics">
+            <div class="metric rv" style="--i:5"><span class="lbl">Automation rate</span><span class="val">36% <span class="delta delta--up"><img src="assets/img/icon-trend-up.svg" alt="">5%</span></span></div>
+            <div class="metric rv" style="--i:6"><span class="lbl">Cost saved</span><span class="val">$1,923.30 <span class="delta delta--up"><img src="assets/img/icon-trend-up.svg" alt="">10%</span></span></div>
+            <div class="metric rv" style="--i:7"><span class="lbl">Average CSAT</span><span class="val">4.1 <span class="delta delta--down"><img src="assets/img/icon-trend-down.svg" alt="">2%</span></span></div>
+          </div>
+          <div class="hub__welcome rv" style="--i:8"><span class="w1">Welcome back, Sophie!</span><span class="w2">Let’s finish your setup</span></div>
+          <div class="hub__ask rv" style="--i:9">
+            <div class="ginput"><img src="assets/img/gaia-icon.png" alt="">Ask Gaia...<span class="sp"></span><img class="ic" src="assets/img/plus-sm.svg" alt=""><img class="ic" src="assets/img/send-sm.svg" alt=""></div>
+            <div class="hub__chips"><span class="chip">Why did handovers go up this week?</span><span class="chip">Which channel dropped the most?</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="acards">
+      <div class="acard rv rv--card" style="--i:4"><img src="assets/img/fi-annotation.svg" alt=""><div><h3>Ask in plain language</h3><p>Automation rate, handovers, a Skill that stopped matching. Ask the way you’d ask your ops lead.</p></div></div>
+      <div class="acard rv rv--card" style="--i:5"><img src="assets/img/fi-mail.svg" alt=""><div><h3>Start from a suggestion</h3><p>Conversation starters point you to the most useful next question for your account.</p></div></div>
+      <div class="acard rv rv--card" style="--i:6"><img src="assets/img/fi-chart.svg" alt=""><div><h3>Pick the numbers you care about</h3><p>Choose the metrics that sit above the question, so you can see what moved and ask why.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== CONVERSATION (scroll-driven) ============================== -->
+<div class="cs" id="conversation">
+<!-- CS_HTML -->
+</div>
+
+<!-- ============================== SHARED CHATS ============================== -->
+<section class="section apps" id="shared" data-reveal>
+  <div class="shead">
+    <span class="tag rv" style="--i:0"><i></i><span class="mono">New: Gaia in the helpdesk</span></span>
+    <h2 class="h3 rv" style="--i:1">Now everyone on your team<br>can ask Gaia.</h2>
+    <p class="lead rv" style="--i:2">Gaia is open to every role, with the same permissions each person already has in Gorgias. Agents can summarize a ticket, look up a customer, or draft a reply without leaving the conversation.</p>
+  </div>
+  <div class="apps__hero">
+    <img class="bg" src="assets/img/shared-bg.jpg" alt="">
+    <div class="app rv rv--card" style="--i:3" id="sharedApp">
+      <div class="app__nav"><img src="assets/img/app-sidebar.png" alt=""></div>
+      <div class="app__content">
+        <div class="sc__hd"><b>Refund delays this week</b><span class="sc__pager"><img src="assets/img/chevron-left.svg" alt="">1 of 7<img src="assets/img/chevron-right.svg" alt=""></span></div>
+        <div class="sc__body">
+          <div class="sc__row sc__row--me sc__msg"><span class="bubble bubble--a">Why are refunds slow this week?</span><img src="assets/img/avatar-ag.png" alt=""></div>
+          <div class="sc__msg"><p class="sc__ai">Refund tickets are up 38% since Monday. Most of the delay comes from orders paid with Klarna: the provider added a manual review step on Sep 10 that holds refunds for 3 to 5 days. 41 of the 52 open refund tickets fit this pattern.</p><div class="sc__meta"><span>Payment history</span><span>18s</span></div></div>
+          <div class="sc__row sc__row--me sc__msg"><span class="bubble bubble--b">Good to know. Can you send us this refund breakdown every Monday morning?</span><img src="assets/img/avatar-photo.png" alt=""></div>
+          <div class="sc__msg"><p class="sc__ai">Done. Routine created: Refund delays report, every Monday at 8:00 AM, posted to this chat. First run is Sep 22.</p><div class="sc__meta"><span>Custom routine built</span><span>9s</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="acards">
+      <div class="acard rv rv--card" style="--i:4"><img src="assets/img/fi-agent.svg" alt=""><div><h3>Agents</h3><p>Summarize tickets, look up customers, draft replies, and apply macros, within their Gorgias permissions.</p></div></div>
+      <div class="acard rv rv--card" style="--i:5"><img src="assets/img/fi-folder.svg" alt=""><div><h3>Admins and leads</h3><p>Everything agents can do, plus setting up and coaching AI Agent and creating Routines.</p></div></div>
+      <div class="acard rv rv--card" style="--i:6"><img src="assets/img/fi-chats.svg" alt=""><div><h3>Everyone</h3><p>Starts in Gaia Hub and can read the chats teammates share.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== DRAFTS ============================== -->
+<section class="section drafts" data-reveal>
+  <div class="container">
+    <div class="shead" style="gap:32px">
+      <div class="drafts__marks rv" style="--i:0"><img src="assets/img/drafts-check.svg" alt=""><img src="assets/img/drafts-x.svg" alt=""></div>
+      <div class="shead">
+        <span class="tag rv" style="--i:1"><i></i><span class="mono">You in control</span></span>
+        <h2 class="h3 rv" style="--i:2">Gaia drafts. You approve.</h2>
+        <p class="lead rv" style="--i:3">Gaia running on a schedule doesn’t change who decides. It reports what it finds, drafts a fix only when you ask, and nothing reaches your live setup until you approve it.</p>
+      </div>
+    </div>
+    <div class="fcards">
+      <div class="fcard rv rv--card" style="--i:4"><div class="fi"><img src="assets/img/icon-target-dark.svg" alt=""></div><div><h3>Routines read and report.</h3><p>Surfaces the fixes that move automation most.</p></div></div>
+      <div class="fcard rv rv--card" style="--i:5"><div class="fi"><img src="assets/img/icon-annotation-alert.svg" alt=""></div><div><h3>Shared Chats are read-only.</h3><p>Writes the change in your voice, grounded in real tickets. You review.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== FAQ ============================== -->
+<section class="section faq" data-reveal>
+  <div class="container">
+    <div class="shead">
+      <span class="tag rv" style="--i:0"><i></i><span class="mono">FAQs</span></span>
+      <h2 class="h2 rv" style="--i:1">Quick answers</h2>
+    </div>
+    <div class="faq__list rv" style="--i:2" id="faq"></div>
+  </div>
+</section>
+
+<!-- ============================== FOOTER placeholder ============================== -->
+<footer class="site-footer"><span class="mono">Footer</span></footer>
+
+<script src="app.js"></script>
+<script>
+/* ---- Before/After section (from the standalone prototype) ---- */
+<!-- BA_JS -->
+</script>
+<script>
+/* ---- Conversation scroll section (from the standalone prototype) ---- */
+<!-- CS_JS -->
+</script>
+</body>
+</html>

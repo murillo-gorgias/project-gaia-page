@@ -11,6 +11,7 @@ python3 -m http.server 8000
 | Folder | |
 |---|---|
 | `before-after-prototype/` | The "Before / After Gaia" section as a working page: the toggle, the two cards, the photo crossfade, and the rain, glass-drop and petal animations. A reference for whoever builds the section in Webflow. |
+| `gaia-lp/` | The full Gaia landing page as one prototype: nav, hero, every section down to a footer placeholder. Built from `template.html` + `styles.css` + `app.js`; `build.py` stitches in the two sections above (scoped CSS, renamed keyframes) and writes `index.html`. Run `python3 build.py` after editing the template or either section. |
 | `conversation-scroll/` | The "Now the whole thing is a conversation" section as a scroll-driven page. The section pins to the screen and reveals itself in seven steps as you scroll: an input, a typed prompt, the Routines block, a second input, a typed question, the chat window, and the share modal. |
 
 ## Notes for implementers
