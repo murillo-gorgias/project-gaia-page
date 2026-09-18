@@ -236,6 +236,7 @@
 .cs .caret { display: none; width: 1px; height: 16px; background: var(--ink-2); vertical-align: -3px; margin-left: 1px; animation: cs-blink 1s steps(2) infinite; }
 .cs .input.typing .caret { display: inline-block; }
 @keyframes cs-blink { to { opacity: 0; } }
+.cs [data-step="1"] #inputA, .cs [data-step="4"] #inputB { cursor: pointer; }
 .cs #inputA { left: 120px; top: 661px; width: 320px; transform: translate(440px, -297px); }
 .cs [data-step="2"] #inputA { width: 512px; transform: translate(344px, -297px); }
 .cs [data-step="3"] #inputA, .cs [data-step="4"] #inputA, .cs [data-step="5"] #inputA, .cs [data-step="6"] #inputA, .cs [data-step="7"] #inputA { width: 512px; transform: none; }
@@ -945,10 +946,12 @@
   // What each step needs on screen (canvas y range). The stage centres it.
   const FOCUS = { 1:[160,412], 2:[160,412], 3:[160,880], 4:[420,1100], 5:[420,1100], 6:[760,1460], 7:[976,1508] };
 
-  let vw = 0, vh = 0, scale = 1, step = 0;
+  const AUTO_MS = 5000;                     // with no scroll or click, each step advances after 5s
+  let vw = 0, vh = 0, scale = 1, step = 0, done = false, visible = false;
   function layout() {
     vw = innerWidth; vh = innerHeight;
     scale = Math.min(1, vw / CANVAS_W);
+    if (done) return settle();
     track.style.height = (vh + STEPS * SEGMENT) + 'px';          // one extra segment so step 7 holds before unpinning
     render();
   }
@@ -961,23 +964,33 @@
   const smooth = (t) => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
 
   let offset = 0, targetOff = 0, raf = 0;
+  // Scroll only ever advances the step. The step decides what the stage centres on.
   function render() {
+    if (done) return;
     const y = Math.min(Math.max(0, -track.getBoundingClientRect().top), STEPS * SEGMENT);
-    const seg = Math.min(STEPS - 1, Math.floor(y / SEGMENT));      // 0..6
-    const s = seg + 1;                                              // 1..7
-    // Glide to the new offset over the first half of each segment, then hold.
-    const t = smooth((y - seg * SEGMENT) / (SEGMENT * 0.5));
-    targetOff = s === 1 ? targetOffset(1) : targetOffset(s - 1) + (targetOffset(s) - targetOffset(s - 1)) * t;
-    if (s !== step) setStep(s);
-    if (!raf) raf = requestAnimationFrame(tick);
+    const s = Math.min(STEPS, Math.floor(y / SEGMENT) + 1);       // 1..7
+    if (s > step) setStep(s);
+    else if (!raf) raf = requestAnimationFrame(tick);
   }
-  // The canvas eases toward the target every frame, so fast or jumpy scrolling never snaps it.
+  // The canvas eases toward the target every frame, so nothing ever snaps.
   function tick() {
     raf = 0;
     const d = targetOff - offset;
-    offset = Math.abs(d) < 0.05 ? targetOff : offset + d * 0.14;
+    offset = Math.abs(d) < 0.05 ? targetOff : offset + d * 0.1;
     canvas.style.transform = `translate(${(vw - CANVAS_W * scale) / 2}px, ${-offset * scale}px) scale(${scale})`;
     if (offset !== targetOff) raf = requestAnimationFrame(tick);
+  }
+  // After the last step the section becomes an ordinary block: no pin, no track, nothing rolls back.
+  function settle() {
+    const wasPinned = track.getBoundingClientRect().top < 0;
+    const trackTop = track.getBoundingClientRect().top + scrollY;
+    const before = offset;
+    done = true; clearTimeout(autoT);
+    stage.style.position = 'static'; stage.style.height = (CANVAS_H * scale) + 'px';
+    track.style.height = (CANVAS_H * scale) + 'px';
+    offset = targetOff = 0;
+    canvas.style.transform = `translate(${(vw - CANVAS_W * scale) / 2}px, 0) scale(${scale})`;
+    if (wasPinned) scrollTo(0, trackTop + before * scale);          // keep the same content in view
   }
 
   /* ---------- Steps ---------- */
@@ -986,9 +999,21 @@
   const TEXT_B = 'Why are refunds slow this week?';
   const on = (id, v) => document.getElementById(id).classList.toggle('on', v);
 
+  let autoT = 0;
+  function armAuto() {
+    clearTimeout(autoT);
+    if (done || !visible || step >= STEPS) return;
+    autoT = setTimeout(() => advance(), AUTO_MS);
+  }
+  function advance() { if (!done && step < STEPS) setStep(step + 1); }
+
   function setStep(s) {
+    if (s <= step || done) return;
     const prev = step; step = s;
     stage.dataset.step = s;
+    targetOff = targetOffset(s);
+    if (!raf) raf = requestAnimationFrame(tick);
+    armAuto();
     // Input A text
     if (s === 1) clearText(inputA);
     else if (s === 2 && prev < 2) typeText(inputA, TEXT_A);
@@ -1002,6 +1027,7 @@
     on('chatBody', s >= 6);
     on('sharedCol', s >= 7);
     if (s === 7 && prev === 6) shareSequence(); else if (s !== 7) cancelShare();
+    if (s === STEPS) setTimeout(settle, prev === 6 ? 3200 : 800);   // let the share sequence and modal land first
   }
 
   /* ---------- Typing ---------- */
@@ -1018,7 +1044,7 @@
     const tick = () => {
       out.textContent = text.slice(0, ++i);
       if (i < text.length) typers.set(el, setTimeout(tick, 18 + Math.random() * 30 + (text[i - 1] === ' ' ? 20 : 0)));
-      else typers.set(el, setTimeout(() => { el.classList.remove('typing'); el.classList.add('done'); typers.delete(el); }, 500));
+      else typers.set(el, setTimeout(() => { el.classList.remove('typing'); el.classList.add('done'); typers.delete(el); setTimeout(advance, 700); }, 500));
     };
     typers.set(el, setTimeout(tick, 220));
   }
@@ -1047,9 +1073,14 @@
     cursor.classList.remove('show'); shareBtn.classList.remove('hover', 'press');
   }
 
+  // Clicking the empty input starts the typing, the way a visitor would expect.
+  inputA.addEventListener('click', () => { if (step === 1) advance(); });
+  inputB.addEventListener('click', () => { if (step === 4) advance(); });
+  // The 5s auto-advance only runs while the section is on screen.
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) armAuto(); else clearTimeout(autoT); }, { threshold: 0.4 }).observe(stage);
   addEventListener('scroll', render, { passive: true });
   addEventListener('resize', layout);
-  layout(); offset = targetOff; tick();
+  layout(); if (step === 0) setStep(1); offset = targetOff; tick();
 })();
 
 </script>

@@ -155,18 +155,19 @@ a { color: inherit; text-decoration: none; }
 .dcard p { font: 400 16px/1.5 var(--sans); color: #c0bbb5; margin-top: 8px; }
 /* Shimmer: a soft white radial highlight, masked to the 1px border ring, sweeping left to right across the row. */
 .dcard::after {
-  content: ""; position: absolute; inset: -1.5px; border-radius: 17px; padding: 1.5px; pointer-events: none;
-  background: radial-gradient(360px 220px at var(--sx, -999px) 50%, rgba(255,255,255,.95) 0, rgba(255,255,255,.45) 35%, rgba(255,255,255,.12) 60%, rgba(255,255,255,0) 80%);
+  content: ""; position: absolute; inset: -1px; border-radius: 17px; padding: 1px; pointer-events: none;
+  background: radial-gradient(320px 220px at var(--sx, -999px) 50%, rgba(255,255,255,.34) 0, rgba(255,255,255,.16) 40%, rgba(255,255,255,0) 75%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
 }
 
 /* =====================================================================
    BEFORE / AFTER wrapper (the hero itself is the .ba block from the prototype)
    ===================================================================== */
-.ba-section { padding: 120px 80px 80px; gap: 48px; }
-.ba-section .container { gap: 48px; }
-.ba-section > .container > .h3 { text-align: center; max-width: 1200px; }
-.ba-wrap { width: 100vw; max-width: 1440px; }
+.ba-section { padding: 120px 0 80px; gap: 48px; }
+.ba-section .container { gap: 48px; max-width: none; }
+.ba-section > .container > .h3 { text-align: center; max-width: 1200px; padding: 0 80px; }
+.ba-wrap { width: 100%; }                                  /* full bleed: the section has no side padding */
+.ba-section .mcp { width: calc(100% - 160px); }
 .mcp { width: 100%; max-width: 1200px; height: 240px; padding: 48px; border-radius: 16px; background: var(--border-faint); border: 1px solid var(--border-soft); display: flex; gap: 24px; position: relative; overflow: hidden; }
 .mcp__content { width: 540px; display: flex; flex-direction: column; gap: 16px; }
 .mcp__content .h4 { font-size: 36px; }

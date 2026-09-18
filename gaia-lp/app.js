@@ -44,7 +44,7 @@
   if (dcards && !reduced) {
     const cards = [...dcards.children];
     let t0 = 0;
-    const PERIOD = 6000, SWEEP = 3200;        // one sweep every 6s, lasting 3.2s
+    const PERIOD = 14000, SWEEP = 8000;       // one sweep every 14s, lasting 8s
     function frame(t) {
       if (!t0) t0 = t;
       const p = ((t - t0) % PERIOD) / SWEEP;   // 0..1 during the sweep, >1 while resting
