@@ -25,43 +25,41 @@
   html, body { margin: 0; background: var(--paper); color: var(--ink); }
   body { font-family: "Inter Variable", Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
 
-  /* ---------- Section ---------- */
+  /* ---------- Section ----------
+     One full-bleed strip, split down the middle: rain on the left, spring on the right.
+     Each half clips its own photo and its own particles, so nothing crosses the seam. */
   .ba {
     position: relative;
     width: 100%;
     max-width: 1440px;
-    min-height: 780px;
     margin: 0 auto;
-    padding: 80px 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
     overflow: hidden;
     isolation: isolate;
   }
 
-  /* Two full-bleed scenes stacked; the active one is visible. */
-  .scene {
+  .halves { display: flex; }
+  /* Each half holds its own photo, its own particles and its own card, so the card
+     always sits on the scene it belongs to, at any width. */
+  .half {
+    position: relative; flex: 1; overflow: hidden;
+    display: flex; align-items: flex-start;
+    padding: 100px 24px 132px;
+  }
+  /* The cards hug the seam: 24px from the middle, so at 1440 they land on the 1200 grid. */
+  .half--before { justify-content: flex-end; padding-left: 120px; }
+  .half--after  { justify-content: flex-start; padding-right: 120px; }
+  .half img.scene {
     position: absolute; inset: 0;
-    opacity: 0;
-    transition: opacity var(--fade) ease;
-    pointer-events: none;
+    width: 100%; height: 100%; object-fit: cover;
     z-index: 0;
   }
-  .scene img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .ba[data-state="before"] .scene--before,
-  .ba[data-state="after"]  .scene--after { opacity: 1; }
+  /* The photos are shot wide; anchor each one away from the seam so the join reads as one scene. */
+  .half--before img.scene { object-position: 40% 50%; }
+  .half--after  img.scene { object-position: 60% 50%; }
 
-  /* Particle layer: its own stacking layer so it can sit under the card (A) or over everything (B). */
-  .particles { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-  .particles > * {
-    position: absolute; inset: 0; width: 100%; height: 100%;
-    opacity: 0; visibility: hidden;
-    transition: opacity var(--fade) ease, visibility 0s linear var(--fade);
-  }
-  .ba[data-state="before"] .particles--before,
-  .ba[data-state="after"]  .particles--after { opacity: 1; visibility: visible; transition-delay: 0s; }
+  /* Particles live inside their own half and inherit its clipping. */
+  .particles { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+  .particles > * { position: absolute; inset: 0; width: 100%; height: 100%; }
 
   /* Wet glass: drops that sit on the "window", blur what is behind them, and slide down. */
   .glass { overflow: hidden; }
@@ -93,51 +91,19 @@
     backdrop-filter: blur(1px) brightness(1.06);
     transform-origin: top center;
   }
-  .ba[data-layer="over"] .particles { z-index: 5; }
-
-  /* ---------- Toggle ---------- */
-  .toggle {
-    position: relative; z-index: 2;
-    display: flex; gap: 2px; padding: 2px;
-    background: var(--card-bg);
-    border: 1px solid var(--border-bold);
-    border-radius: 999px;
-    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-  }
-  .toggle__thumb {
-    position: absolute; top: 2px; left: 0; height: calc(100% - 4px);
-    border-radius: 999px; background: var(--ink);
-    transition: transform 380ms cubic-bezier(.3,.8,.3,1), width 380ms cubic-bezier(.3,.8,.3,1);
-    will-change: transform, width;
-  }
-  .toggle button {
-    appearance: none; border: 0; cursor: pointer; position: relative;
-    padding: 6px 24px; border-radius: 999px;
-    background: transparent; color: var(--ink);
-    font: 500 16px/1.5 "Inter Variable", Inter, sans-serif;
-    transition: color 300ms ease;
-  }
-  .toggle button[aria-pressed="true"] { color: var(--paper); }
-  .toggle button:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 
   /* ---------- Cards ---------- */
-  .cards { position: relative; z-index: 2; display: grid; width: 100%; max-width: 576px; }
   .card {
-    grid-area: 1 / 1;
-    align-self: start;            /* each card keeps its own height */
+    position: relative; z-index: 3;
+    width: 100%; max-width: 576px;
     display: flex; flex-direction: column; gap: 24px;
     padding: 32px;
     border-radius: 20px;
     background: var(--card-bg);
     border: 1px solid var(--border-default);
     -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-    opacity: 0;
-    transition: opacity var(--fade) ease;
-    pointer-events: none;
   }
-  .card--after { overflow: hidden; }
-  .ba[data-state="before"] .card--before,
-  .ba[data-state="after"]  .card--after { opacity: 1; pointer-events: auto; }
+  .card--after { position: relative; overflow: hidden; }
 
   .card__top { display: flex; flex-direction: column; gap: 16px; }
   .eyebrow { display: flex; align-items: center; gap: 12px; }
@@ -175,56 +141,54 @@
   }
   .flower img { display: block; width: 100%; height: 100%; }
 
-  /* ---------- Load-in on each toggle click ---------- */
-  .scene img { transform: scale(1); }
-  .scene.is-entering img { animation: settle 1100ms cubic-bezier(.2,.7,.2,1) both; }
+  /* ---------- Load-in, once, when the section scrolls into view ---------- */
+  .half img.scene { transform: scale(1); }
+  .ba.is-entering img.scene { animation: settle 1100ms cubic-bezier(.2,.7,.2,1) both; }
   @keyframes settle { from { transform: scale(1.035); } to { transform: scale(1); } }
 
-  .card.is-entering { animation: cardIn 520ms cubic-bezier(.2,.7,.2,1) both; }
+  .ba.is-entering .card { animation: cardIn 520ms cubic-bezier(.2,.7,.2,1) both; }
   @keyframes cardIn { from { transform: translateY(10px) scale(.985); } to { transform: none; } }
 
-  .card.is-entering :is(.eyebrow, h3, li, .stat) {
+  .ba.is-entering .card :is(.eyebrow, h3, li, .stat) {
     animation: rise 560ms cubic-bezier(.2,.7,.2,1) both;
     animation-delay: calc(var(--i, 0) * 55ms + 80ms);
   }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-  .card.is-entering .flower img { animation: bloom 900ms cubic-bezier(.2,.7,.2,1) both; animation-delay: 200ms; }
+  .ba.is-entering .flower img { animation: bloom 900ms cubic-bezier(.2,.7,.2,1) both; animation-delay: 200ms; }
   @keyframes bloom { from { opacity: 0; transform: translate(28px, 28px) scale(.96); } to { opacity: 1; transform: none; } }
 
+  /* Under 900px the halves stack, each keeping its own scene behind its own card. */
+  @media (max-width: 900px) {
+    .halves { flex-direction: column; }
+    .half, .half--before, .half--after {
+      justify-content: center;
+      padding: 64px 24px;
+    }
+  }
   @media (max-width: 640px) {
-    .ba { min-height: 0; padding: 48px 16px; }
+    .half, .half--before, .half--after { padding: 48px 16px; }
     .card { padding: 24px; }
     .card h3 { font-size: 24px; }
     .stat strong { font-size: 40px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .scene, .card, .toggle button, .toggle__thumb { transition: none; }
     .is-entering, .is-entering * { animation: none !important; }
   }
 </style>
 </head>
 <body>
 
-<section class="ba" data-state="before" data-layer="over" id="ba">
-  <!-- Scenes: the two photos. Particles are a separate layer so their stacking can be switched. -->
-  <div class="scene scene--before" aria-hidden="true"><img src="assets/img/rain-bg.jpg" alt=""></div>
-  <div class="scene scene--after" aria-hidden="true"><img src="assets/img/spring-bg.jpg" alt=""></div>
-  <div class="particles" aria-hidden="true">
-    <canvas id="rain" class="particles--before"></canvas>
-    <div id="glass" class="glass particles--before"></div>
-    <canvas id="petals" class="particles--after"></canvas>
-  </div>
-
-  <div class="toggle" role="group" aria-label="Before or after Gaia">
-    <span class="toggle__thumb" aria-hidden="true"></span>
-    <button type="button" data-set="before" aria-pressed="true">Before</button>
-    <button type="button" data-set="after" aria-pressed="false">After</button>
-  </div>
-
-  <div class="cards">
-    <article class="card card--before">
-      <div class="card__top">
+<section class="ba" id="ba">
+  <!-- The strip: rain on the left, spring on the right. Each half clips its own particles. -->
+  <div class="halves">
+    <div class="half half--before">
+      <img class="scene" src="assets/img/rain-bg.jpg" alt="" aria-hidden="true">
+      <div class="particles" aria-hidden="true">
+        <canvas id="rain"></canvas>
+        <div id="glass" class="glass"></div>
+      </div>
+      <article class="card card--before">
         <div class="card__top">
           <div class="eyebrow"><span class="eyebrow__dot"></span><span class="mono">Without Gaia</span></div>
           <h3>Your setup goes stale the week nobody touches it.</h3>
@@ -236,29 +200,34 @@
           <li><img src="assets/img/before-cross.svg" alt="">Automation slips and nobody can say why</li>
           <li><img src="assets/img/before-cross.svg" alt="">The real fix is an AI Ops hire that rarely gets approved</li>
         </ul>
+        <div class="stat">
+          <strong>~10 hrs / wk</strong>
+          <span class="mono">Spent maintaining setup manually</span>
+        </div>
+      </article>
+    </div>
+    <div class="half half--after">
+      <img class="scene" src="assets/img/spring-bg.jpg" alt="" aria-hidden="true">
+      <div class="particles" aria-hidden="true">
+        <canvas id="petals"></canvas>
       </div>
-      <div class="stat">
-        <strong>~10 hrs / wk</strong>
-        <span class="mono">Spent maintaining setup manually</span>
-      </div>
-    </article>
-
-    <article class="card card--after">
-      <div class="eyebrow"><span class="eyebrow__logo"><img src="assets/img/gaia-logo.png" alt=""></span><span class="mono">With Gaia</span></div>
-      <h3>Your setup gets better with every fix you approve.</h3>
-      <ul>
-        <li><img src="assets/img/after-check.svg" alt="">Gaia checks your setup when you ask, or on a Routine</li>
-        <li><img src="assets/img/after-check.svg" alt="">Ask, and Gaia drafts the fix for any conflict</li>
-        <li><img src="assets/img/after-check.svg" alt="">Every draft waits for your approval</li>
-        <li><img src="assets/img/after-check.svg" alt="">Routines keep an eye on the numbers you care about</li>
-        <li><img src="assets/img/after-check.svg" alt="">AI Ops know-how built into Gorgias</li>
-      </ul>
-      <div class="stat">
-        <strong>15 min / wk</strong>
-        <span class="mono">Approve drafts. Done.</span>
-      </div>
-      <div class="flower" aria-hidden="true"><img src="assets/img/with-gaia-flower.png" alt=""></div>
-    </article>
+      <article class="card card--after">
+        <div class="eyebrow"><span class="eyebrow__logo"><img src="assets/img/gaia-logo.png" alt=""></span><span class="mono">With Gaia</span></div>
+        <h3>Your setup gets better with every fix you approve.</h3>
+        <ul>
+          <li><img src="assets/img/after-check.svg" alt="">Gaia checks your setup when you ask, or on a Routine</li>
+          <li><img src="assets/img/after-check.svg" alt="">Ask, and Gaia drafts the fix for any conflict</li>
+          <li><img src="assets/img/after-check.svg" alt="">Every draft waits for your approval</li>
+          <li><img src="assets/img/after-check.svg" alt="">Routines keep an eye on the numbers you care about</li>
+          <li><img src="assets/img/after-check.svg" alt="">AI Ops know-how built into Gorgias</li>
+        </ul>
+        <div class="stat">
+          <strong>15 min / wk</strong>
+          <span class="mono">Approve drafts. Done.</span>
+        </div>
+        <div class="flower" aria-hidden="true"><img src="assets/img/with-gaia-flower.png" alt=""></div>
+      </article>
+    </div>
   </div>
 </section>
 
@@ -267,35 +236,18 @@
   const section = document.getElementById('ba');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---------- Toggle ---------- */
-  const toggle = section.querySelector('.toggle');
-  const thumb = toggle.querySelector('.toggle__thumb');
-  function moveThumb(b, instant) {
-    if (instant) thumb.style.transition = 'none';
-    thumb.style.width = b.offsetWidth + 'px';
-    thumb.style.transform = `translateX(${b.offsetLeft - 2}px)`;
-    if (instant) { void thumb.offsetWidth; thumb.style.transition = ''; }
-  }
-  // Stagger index for the load-in: each row of the active card rises 55ms after the one before.
+  /* ---------- Load-in: fires once, the first time the section scrolls into view ---------- */
+  // Stagger index: each row of a card rises 55ms after the one before.
   section.querySelectorAll('.card').forEach(card => {
     card.querySelectorAll('.eyebrow, h3, li, .stat').forEach((el, i) => el.style.setProperty('--i', i));
   });
-  function enter(state) {
-    const targets = [section.querySelector('.card--' + state), section.querySelector('.scene--' + state)];
-    for (const el of targets) { el.classList.remove('is-entering'); void el.offsetWidth; el.classList.add('is-entering'); }
-    clearTimeout(enter.t);
-    enter.t = setTimeout(() => targets.forEach(el => el.classList.remove('is-entering')), 1400);
+  let entered = false;
+  function enter() {
+    if (entered || reduced) return;
+    entered = true;
+    section.classList.add('is-entering');
+    setTimeout(() => section.classList.remove('is-entering'), 1600);
   }
-  toggle.addEventListener('click', (e) => {
-    const b = e.target.closest('button[data-set]'); if (!b) return;
-    if (section.dataset.state === b.dataset.set) return;
-    section.dataset.state = b.dataset.set;
-    toggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-    moveThumb(b, false);
-    enter(b.dataset.set);
-  });
-  moveThumb(toggle.querySelector('button[aria-pressed="true"]'), true);
-  document.fonts && document.fonts.ready.then(() => moveThumb(toggle.querySelector('button[aria-pressed="true"]'), true));
 
   const density = 2;   // locked in: max density, particles over everything
 
@@ -458,7 +410,7 @@
     }
     function build() {
       root.textContent = '';
-      const n = Math.round((w / 1440) * 10 * density);
+      const n = Math.round((w / 1440) * 10 * density);   // w is one half's width, so this is ~half the old count
       drops = Array.from({ length: n }, () => {
         const el = document.createElement('div'); el.className = 'drop';
         const trail = document.createElement('div'); trail.className = 'trail';
@@ -493,7 +445,7 @@
   function loop(t) {
     raf = 0;
     if (!visible || document.hidden) return;
-    rain.frame(t); petals.frame(t);   // both, so the crossfade never shows a stale frame
+    rain.frame(t); petals.frame(t);   // both halves are on screen at once
     glass.frame(Math.min((t - (loop.last || t)) / 1000, 0.05)); loop.last = t;
     raf = requestAnimationFrame(loop);
   }
@@ -501,10 +453,12 @@
   function resizeAll() { rain.resize(); petals.resize(); glass.resize(); if (reduced) { rain.frame(0); petals.frame(0); glass.frame(0); } }
 
   new ResizeObserver(resizeAll).observe(section);
-  new IntersectionObserver(([e]) => { visible = e.isIntersecting; start(); }, { threshold: 0.05 }).observe(section);
+  new IntersectionObserver(([e]) => {
+    visible = e.isIntersecting;
+    if (visible) enter();
+    start();
+  }, { threshold: 0.05 }).observe(section);
   document.addEventListener('visibilitychange', start);
-  section.addEventListener('transitionend', start);
-  toggle.addEventListener('click', start);
   resizeAll(); start();
 })();
 </script>

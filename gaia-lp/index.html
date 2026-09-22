@@ -16,32 +16,27 @@
     position: relative;
     width: 100%;
     max-width: 1440px;
-    min-height: 780px;
     margin: 0 auto;
-    padding: 80px 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
     overflow: hidden;
     isolation: isolate;
   }
-.ba-wrap .scene {
+.ba-wrap .halves { display: flex; }
+.ba-wrap .half {
+    position: relative; flex: 1; overflow: hidden;
+    display: flex; align-items: flex-start;
+    padding: 100px 24px 132px;
+  }
+.ba-wrap .half--before { justify-content: flex-end; padding-left: 120px; }
+.ba-wrap .half--after { justify-content: flex-start; padding-right: 120px; }
+.ba-wrap .half img.scene {
     position: absolute; inset: 0;
-    opacity: 0;
-    transition: opacity var(--fade) ease;
-    pointer-events: none;
+    width: 100%; height: 100%; object-fit: cover;
     z-index: 0;
   }
-.ba-wrap .scene img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.ba-wrap .ba[data-state="before"] .scene--before, .ba-wrap .ba[data-state="after"]  .scene--after { opacity: 1; }
-.ba-wrap .particles { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-.ba-wrap .particles > * {
-    position: absolute; inset: 0; width: 100%; height: 100%;
-    opacity: 0; visibility: hidden;
-    transition: opacity var(--fade) ease, visibility 0s linear var(--fade);
-  }
-.ba-wrap .ba[data-state="before"] .particles--before, .ba-wrap .ba[data-state="after"]  .particles--after { opacity: 1; visibility: visible; transition-delay: 0s; }
+.ba-wrap .half--before img.scene { object-position: 40% 50%; }
+.ba-wrap .half--after  img.scene { object-position: 60% 50%; }
+.ba-wrap .particles { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.ba-wrap .particles > * { position: absolute; inset: 0; width: 100%; height: 100%; }
 .ba-wrap .glass { overflow: hidden; }
 .ba-wrap .drop, .ba-wrap .trail {
     position: absolute; left: 0; top: 0;
@@ -68,46 +63,17 @@
     backdrop-filter: blur(1px) brightness(1.06);
     transform-origin: top center;
   }
-.ba-wrap .ba[data-layer="over"] .particles { z-index: 5; }
-.ba-wrap .toggle {
-    position: relative; z-index: 2;
-    display: flex; gap: 2px; padding: 2px;
-    background: var(--card-bg);
-    border: 1px solid var(--border-bold);
-    border-radius: 999px;
-    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-  }
-.ba-wrap .toggle__thumb {
-    position: absolute; top: 2px; left: 0; height: calc(100% - 4px);
-    border-radius: 999px; background: var(--ink);
-    transition: transform 380ms cubic-bezier(.3,.8,.3,1), width 380ms cubic-bezier(.3,.8,.3,1);
-    will-change: transform, width;
-  }
-.ba-wrap .toggle button {
-    appearance: none; border: 0; cursor: pointer; position: relative;
-    padding: 6px 24px; border-radius: 999px;
-    background: transparent; color: var(--ink);
-    font: 500 16px/1.5 "Inter Variable", Inter, sans-serif;
-    transition: color 300ms ease;
-  }
-.ba-wrap .toggle button[aria-pressed="true"] { color: var(--paper); }
-.ba-wrap .toggle button:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
-.ba-wrap .cards { position: relative; z-index: 2; display: grid; width: 100%; max-width: 576px; }
 .ba-wrap .card {
-    grid-area: 1 / 1;
-    align-self: start;            
+    position: relative; z-index: 3;
+    width: 100%; max-width: 576px;
     display: flex; flex-direction: column; gap: 24px;
     padding: 32px;
     border-radius: 20px;
     background: var(--card-bg);
     border: 1px solid var(--border-default);
     -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-    opacity: 0;
-    transition: opacity var(--fade) ease;
-    pointer-events: none;
   }
-.ba-wrap .card--after { overflow: hidden; }
-.ba-wrap .ba[data-state="before"] .card--before, .ba-wrap .ba[data-state="after"]  .card--after { opacity: 1; pointer-events: auto; }
+.ba-wrap .card--after { position: relative; overflow: hidden; }
 .ba-wrap .card__top { display: flex; flex-direction: column; gap: 16px; }
 .ba-wrap .eyebrow { display: flex; align-items: center; gap: 12px; }
 .ba-wrap .eyebrow__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brand-500); }
@@ -141,24 +107,28 @@
     pointer-events: none;
   }
 .ba-wrap .flower img { display: block; width: 100%; height: 100%; }
-.ba-wrap .scene img { transform: scale(1); }
-.ba-wrap .scene.is-entering img { animation: ba-settle 1100ms cubic-bezier(.2,.7,.2,1) both; }
+.ba-wrap .half img.scene { transform: scale(1); }
+.ba-wrap .ba.is-entering img.scene { animation: ba-settle 1100ms cubic-bezier(.2,.7,.2,1) both; }
 @keyframes ba-settle { from { transform: scale(1.035); } to { transform: scale(1); } }
-.ba-wrap .card.is-entering { animation: ba-cardIn 520ms cubic-bezier(.2,.7,.2,1) both; }
+.ba-wrap .ba.is-entering .card { animation: ba-cardIn 520ms cubic-bezier(.2,.7,.2,1) both; }
 @keyframes ba-cardIn { from { transform: translateY(10px) scale(.985); } to { transform: none; } }
-.ba-wrap .card.is-entering :is(.eyebrow, .ba-wrap h3, .ba-wrap li, .ba-wrap .stat) {
+.ba-wrap .ba.is-entering .card :is(.eyebrow, .ba-wrap h3, .ba-wrap li, .ba-wrap .stat) {
     animation: ba-rise 560ms cubic-bezier(.2,.7,.2,1) both;
     animation-delay: calc(var(--i, 0) * 55ms + 80ms);
   }
 @keyframes ba-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.ba-wrap .card.is-entering .flower img { animation: ba-bloom 900ms cubic-bezier(.2,.7,.2,1) both; animation-delay: 200ms; }
+.ba-wrap .ba.is-entering .flower img { animation: ba-bloom 900ms cubic-bezier(.2,.7,.2,1) both; animation-delay: 200ms; }
 @keyframes ba-bloom { from { opacity: 0; transform: translate(28px, 28px) scale(.96); } to { opacity: 1; transform: none; } }
-@media (max-width: 640px) {.ba-wrap .ba { min-height: 0; padding: 48px 16px; }
+@media (max-width: 900px) {.ba-wrap .halves { flex-direction: column; }
+.ba-wrap .half, .ba-wrap .half--before, .ba-wrap .half--after {
+      justify-content: center;
+      padding: 64px 24px;
+    }}
+@media (max-width: 640px) {.ba-wrap .half, .ba-wrap .half--before, .ba-wrap .half--after { padding: 48px 16px; }
 .ba-wrap .card { padding: 24px; }
 .ba-wrap .card h3 { font-size: 24px; }
 .ba-wrap .stat strong { font-size: 40px; }}
-@media (prefers-reduced-motion: reduce) {.ba-wrap .scene, .ba-wrap .card, .ba-wrap .toggle button, .ba-wrap .toggle__thumb { transition: none; }
-.ba-wrap .is-entering, .ba-wrap .is-entering * { animation: none !important; }}
+@media (prefers-reduced-motion: reduce) {.ba-wrap .is-entering, .ba-wrap .is-entering * { animation: none !important; }}
 /* Page override: the prototype caps .ba at 1440px; on this page it runs edge to edge */
 .ba-wrap .ba { max-width: none; }
 /* ---- Conversation scroll section (scoped) ---- */
@@ -380,105 +350,6 @@
   </div>
 </section>
 
-<!-- ============================== DIAGNOSE (shimmer) ============================== -->
-<section class="section diagnose" id="diagnose" data-reveal>
-  <div class="container">
-    <div class="shead">
-      <span class="tag rv" style="--i:0"><i></i><span class="mono">How Gaia works</span></span>
-      <h2 class="h3 rv" style="--i:1">Diagnose. Draft. <em>Ship</em>.</h2>
-      <p class="lead rv" style="--i:2">Every gap Gaia closes is a conversation AI Agent resolves, so your team doesn’t have to.</p>
-    </div>
-    <div class="dcards" id="dcards">
-      <div class="dcard rv rv--card" style="--i:3"><div class="fi"><img src="assets/img/icon-target.svg" alt=""></div><div><h3>Diagnoses</h3><p>Ask, and Gaia reads handovers, low-CSAT replies, and conflicting knowledge, then points to the gaps holding your automation back.</p></div></div>
-      <div class="dcard rv rv--card" style="--i:4"><div class="fi"><img src="assets/img/icon-pencil.svg" alt=""></div><div><h3>Drafts</h3><p>Say the word, and it writes the fix in your brand voice, based on your real tickets. Edit anything you want.</p></div></div>
-      <div class="dcard rv rv--card" style="--i:5"><div class="fi"><img src="assets/img/icon-send.svg" alt=""></div><div><h3>Ships</h3><p>Approve it, and Gaia publishes the change to your live setup. Until you do, nothing moves.</p></div></div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================== BEFORE / AFTER ============================== -->
-<section class="section ba-section" data-reveal>
-  <div class="container">
-    <h2 class="h3 rv" style="--i:0">Tuning AI used to be someone’s whole job.<br>Now Gaia does the legwork.</h2>
-    <div class="ba-wrap rv rv--card" style="--i:1">
-<section class="ba" data-state="before" data-layer="over" id="ba">
-  <!-- Scenes: the two photos. Particles are a separate layer so their stacking can be switched. -->
-  <div class="scene scene--before" aria-hidden="true"><img src="assets/img/rain-bg.jpg" alt=""></div>
-  <div class="scene scene--after" aria-hidden="true"><img src="assets/img/spring-bg.jpg" alt=""></div>
-  <div class="particles" aria-hidden="true">
-    <canvas id="rain" class="particles--before"></canvas>
-    <div id="glass" class="glass particles--before"></div>
-    <canvas id="petals" class="particles--after"></canvas>
-  </div>
-
-  <div class="toggle" role="group" aria-label="Before or after Gaia">
-    <span class="toggle__thumb" aria-hidden="true"></span>
-    <button type="button" data-set="before" aria-pressed="true">Before</button>
-    <button type="button" data-set="after" aria-pressed="false">After</button>
-  </div>
-
-  <div class="cards">
-    <article class="card card--before">
-      <div class="card__top">
-        <div class="card__top">
-          <div class="eyebrow"><span class="eyebrow__dot"></span><span class="mono">Without Gaia</span></div>
-          <h3>Your setup goes stale the week nobody touches it.</h3>
-        </div>
-        <ul>
-          <li><img src="assets/img/before-cross.svg" alt="">Audits happen after something breaks</li>
-          <li><img src="assets/img/before-cross.svg" alt="">Macros, knowledge, and Skills drift out of sync</li>
-          <li><img src="assets/img/before-cross.svg" alt="">Someone rewrites instructions by hand</li>
-          <li><img src="assets/img/before-cross.svg" alt="">Automation slips and nobody can say why</li>
-          <li><img src="assets/img/before-cross.svg" alt="">The real fix is an AI Ops hire that rarely gets approved</li>
-        </ul>
-      </div>
-      <div class="stat">
-        <strong>~10 hrs / wk</strong>
-        <span class="mono">Spent maintaining setup manually</span>
-      </div>
-    </article>
-
-    <article class="card card--after">
-      <div class="eyebrow"><span class="eyebrow__logo"><img src="assets/img/gaia-logo.png" alt=""></span><span class="mono">With Gaia</span></div>
-      <h3>Your setup gets better with every fix you approve.</h3>
-      <ul>
-        <li><img src="assets/img/after-check.svg" alt="">Gaia checks your setup when you ask, or on a Routine</li>
-        <li><img src="assets/img/after-check.svg" alt="">Ask, and Gaia drafts the fix for any conflict</li>
-        <li><img src="assets/img/after-check.svg" alt="">Every draft waits for your approval</li>
-        <li><img src="assets/img/after-check.svg" alt="">Routines keep an eye on the numbers you care about</li>
-        <li><img src="assets/img/after-check.svg" alt="">AI Ops know-how built into Gorgias</li>
-      </ul>
-      <div class="stat">
-        <strong>15 min / wk</strong>
-        <span class="mono">Approve drafts. Done.</span>
-      </div>
-      <div class="flower" aria-hidden="true"><img src="assets/img/with-gaia-flower.png" alt=""></div>
-    </article>
-  </div>
-</section>
-    </div>
-    <div class="mcp rv rv--card" style="--i:2">
-      <div class="mcp__content">
-        <span class="tag"><i></i><span class="mono">Built on Gorgias</span></span>
-        <h3 class="h4">On day one, Gaia already knows ecommerce support.</h3>
-      </div>
-      <p class="mcp__text">Gaia learns from the largest ecommerce-support dataset on Shopify, so it brings what’s worked across thousands of brands to your account. It also learns from what you approve, edit, and reject, so every draft fits your brand better than the last.</p>
-      <img class="mcp__orbit" src="assets/img/orbit-card.svg" alt="">
-    </div>
-  </div>
-</section>
-
-<!-- ============================== TESTIMONIAL ============================== -->
-<section class="section testimonial" data-reveal>
-  <div class="container">
-    <div class="testimonial__photo rv rv--card" style="--i:0"><img src="assets/img/nicole-parker.png" alt="Nicole Parker"></div>
-    <div class="testimonial__body">
-      <p class="h5 rv" style="--i:1">Gaia completely transformed how we manage our knowledge base. We had it audit our existing content. It flagged duplications and identified missing information. Within minutes it generated a detailed, ready to use draft. All I had to do was review, test, and click publish.</p>
-      <div class="testimonial__who rv" style="--i:2"><b>Nicole Parker</b><span class="mono">Senior Manager of Customer Service at Bare Necessities</span></div>
-    </div>
-  </div>
-</section>
-
 <!-- ============================== GAIA HUB ============================== -->
 <section class="section apps" id="hub" data-reveal>
   <div class="shead">
@@ -622,6 +493,7 @@
 </div>
 </div>
 
+
 <!-- ============================== SHARED CHATS ============================== -->
 <section class="section apps" id="shared" data-reveal>
   <div class="shead">
@@ -651,20 +523,97 @@
   </div>
 </section>
 
-<!-- ============================== DRAFTS ============================== -->
-<section class="section drafts" data-reveal>
+<!-- ============================== DIAGNOSE (shimmer) ============================== -->
+<section class="section diagnose" id="diagnose" data-reveal>
   <div class="container">
-    <div class="shead" style="gap:32px">
-      <div class="drafts__marks rv" style="--i:0"><img src="assets/img/drafts-check.svg" alt=""><img src="assets/img/drafts-x.svg" alt=""></div>
-      <div class="shead">
-        <span class="tag rv" style="--i:1"><i></i><span class="mono">You in control</span></span>
-        <h2 class="h3 rv" style="--i:2">Gaia drafts. You approve.</h2>
-        <p class="lead rv" style="--i:3">Gaia running on a schedule doesn’t change who decides. It reports what it finds, drafts a fix only when you ask, and nothing reaches your live setup until you approve it.</p>
-      </div>
+    <div class="shead">
+      <span class="tag rv" style="--i:0"><i></i><span class="mono">How Gaia works</span></span>
+      <h2 class="h3 rv" style="--i:1">Diagnose. Draft. <em>Ship</em>.</h2>
+      <p class="lead rv" style="--i:2">Every gap Gaia closes is a conversation AI Agent resolves, so your team doesn’t have to.</p>
     </div>
-    <div class="fcards">
-      <div class="fcard rv rv--card" style="--i:4"><div class="fi"><img src="assets/img/icon-target-dark.svg" alt=""></div><div><h3>Routines read and report.</h3><p>Surfaces the fixes that move automation most.</p></div></div>
-      <div class="fcard rv rv--card" style="--i:5"><div class="fi"><img src="assets/img/icon-annotation-alert.svg" alt=""></div><div><h3>Shared Chats are read-only.</h3><p>Writes the change in your voice, grounded in real tickets. You review.</p></div></div>
+    <div class="dcards" id="dcards">
+      <div class="dcard rv rv--card" style="--i:3"><div class="fi"><img src="assets/img/icon-target.svg" alt=""></div><div><h3>Diagnoses</h3><p>Ask, and Gaia reads handovers, low-CSAT replies, and conflicting knowledge, then points to the gaps holding your automation back.</p></div></div>
+      <div class="dcard rv rv--card" style="--i:4"><div class="fi"><img src="assets/img/icon-pencil.svg" alt=""></div><div><h3>Drafts</h3><p>Say the word, and it writes the fix in your brand voice, based on your real tickets. Edit anything you want.</p></div></div>
+      <div class="dcard rv rv--card" style="--i:5"><div class="fi"><img src="assets/img/icon-send.svg" alt=""></div><div><h3>Ships</h3><p>Approve it, and Gaia publishes the change to your live setup. Until you do, nothing moves.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== BEFORE / AFTER ============================== -->
+<section class="section ba-section" data-reveal>
+  <div class="container">
+    <h2 class="h3 rv" style="--i:0">Tuning AI used to be someone’s whole job.<br>Now Gaia does the legwork.</h2>
+    <div class="ba-wrap rv rv--card" style="--i:1">
+<section class="ba" id="ba">
+  <!-- The strip: rain on the left, spring on the right. Each half clips its own particles. -->
+  <div class="halves">
+    <div class="half half--before">
+      <img class="scene" src="assets/img/rain-bg.jpg" alt="" aria-hidden="true">
+      <div class="particles" aria-hidden="true">
+        <canvas id="rain"></canvas>
+        <div id="glass" class="glass"></div>
+      </div>
+      <article class="card card--before">
+        <div class="card__top">
+          <div class="eyebrow"><span class="eyebrow__dot"></span><span class="mono">Without Gaia</span></div>
+          <h3>Your setup goes stale the week nobody touches it.</h3>
+        </div>
+        <ul>
+          <li><img src="assets/img/before-cross.svg" alt="">Audits happen after something breaks</li>
+          <li><img src="assets/img/before-cross.svg" alt="">Macros, knowledge, and Skills drift out of sync</li>
+          <li><img src="assets/img/before-cross.svg" alt="">Someone rewrites instructions by hand</li>
+          <li><img src="assets/img/before-cross.svg" alt="">Automation slips and nobody can say why</li>
+          <li><img src="assets/img/before-cross.svg" alt="">The real fix is an AI Ops hire that rarely gets approved</li>
+        </ul>
+        <div class="stat">
+          <strong>~10 hrs / wk</strong>
+          <span class="mono">Spent maintaining setup manually</span>
+        </div>
+      </article>
+    </div>
+    <div class="half half--after">
+      <img class="scene" src="assets/img/spring-bg.jpg" alt="" aria-hidden="true">
+      <div class="particles" aria-hidden="true">
+        <canvas id="petals"></canvas>
+      </div>
+      <article class="card card--after">
+        <div class="eyebrow"><span class="eyebrow__logo"><img src="assets/img/gaia-logo.png" alt=""></span><span class="mono">With Gaia</span></div>
+        <h3>Your setup gets better with every fix you approve.</h3>
+        <ul>
+          <li><img src="assets/img/after-check.svg" alt="">Gaia checks your setup when you ask, or on a Routine</li>
+          <li><img src="assets/img/after-check.svg" alt="">Ask, and Gaia drafts the fix for any conflict</li>
+          <li><img src="assets/img/after-check.svg" alt="">Every draft waits for your approval</li>
+          <li><img src="assets/img/after-check.svg" alt="">Routines keep an eye on the numbers you care about</li>
+          <li><img src="assets/img/after-check.svg" alt="">AI Ops know-how built into Gorgias</li>
+        </ul>
+        <div class="stat">
+          <strong>15 min / wk</strong>
+          <span class="mono">Approve drafts. Done.</span>
+        </div>
+        <div class="flower" aria-hidden="true"><img src="assets/img/with-gaia-flower.png" alt=""></div>
+      </article>
+    </div>
+  </div>
+</section>
+    </div>
+    <div class="mcp rv rv--card" style="--i:2">
+      <div class="mcp__content">
+        <span class="tag"><i></i><span class="mono">Built on Gorgias</span></span>
+        <h3 class="h4">On day one, Gaia already knows ecommerce support.</h3>
+      </div>
+      <p class="mcp__text">Gaia learns from the largest ecommerce-support dataset on Shopify, so it brings what’s worked across thousands of brands to your account. It also learns from what you approve, edit, and reject, so every draft fits your brand better than the last.</p>
+      <img class="mcp__orbit" src="assets/img/orbit-card.svg" alt="">
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TESTIMONIAL ============================== -->
+<section class="section testimonial" data-reveal>
+  <div class="container">
+    <div class="testimonial__photo rv rv--card" style="--i:0"><img src="assets/img/nicole-parker.png" alt="Nicole Parker"></div>
+    <div class="testimonial__body">
+      <p class="h5 rv" style="--i:1">Gaia completely transformed how we manage our knowledge base. We had it audit our existing content. It flagged duplications and identified missing information. Within minutes it generated a detailed, ready to use draft. All I had to do was review, test, and click publish.</p>
+      <div class="testimonial__who rv" style="--i:2"><b>Nicole Parker</b><span class="mono">Senior Manager of Customer Service at Bare Necessities</span></div>
     </div>
   </div>
 </section>
@@ -691,35 +640,18 @@
   const section = document.getElementById('ba');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---------- Toggle ---------- */
-  const toggle = section.querySelector('.toggle');
-  const thumb = toggle.querySelector('.toggle__thumb');
-  function moveThumb(b, instant) {
-    if (instant) thumb.style.transition = 'none';
-    thumb.style.width = b.offsetWidth + 'px';
-    thumb.style.transform = `translateX(${b.offsetLeft - 2}px)`;
-    if (instant) { void thumb.offsetWidth; thumb.style.transition = ''; }
-  }
-  // Stagger index for the load-in: each row of the active card rises 55ms after the one before.
+  /* ---------- Load-in: fires once, the first time the section scrolls into view ---------- */
+  // Stagger index: each row of a card rises 55ms after the one before.
   section.querySelectorAll('.card').forEach(card => {
     card.querySelectorAll('.eyebrow, h3, li, .stat').forEach((el, i) => el.style.setProperty('--i', i));
   });
-  function enter(state) {
-    const targets = [section.querySelector('.card--' + state), section.querySelector('.scene--' + state)];
-    for (const el of targets) { el.classList.remove('is-entering'); void el.offsetWidth; el.classList.add('is-entering'); }
-    clearTimeout(enter.t);
-    enter.t = setTimeout(() => targets.forEach(el => el.classList.remove('is-entering')), 1400);
+  let entered = false;
+  function enter() {
+    if (entered || reduced) return;
+    entered = true;
+    section.classList.add('is-entering');
+    setTimeout(() => section.classList.remove('is-entering'), 1600);
   }
-  toggle.addEventListener('click', (e) => {
-    const b = e.target.closest('button[data-set]'); if (!b) return;
-    if (section.dataset.state === b.dataset.set) return;
-    section.dataset.state = b.dataset.set;
-    toggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-    moveThumb(b, false);
-    enter(b.dataset.set);
-  });
-  moveThumb(toggle.querySelector('button[aria-pressed="true"]'), true);
-  document.fonts && document.fonts.ready.then(() => moveThumb(toggle.querySelector('button[aria-pressed="true"]'), true));
 
   const density = 2;   // locked in: max density, particles over everything
 
@@ -882,7 +814,7 @@
     }
     function build() {
       root.textContent = '';
-      const n = Math.round((w / 1440) * 10 * density);
+      const n = Math.round((w / 1440) * 10 * density);   // w is one half's width, so this is ~half the old count
       drops = Array.from({ length: n }, () => {
         const el = document.createElement('div'); el.className = 'drop';
         const trail = document.createElement('div'); trail.className = 'trail';
@@ -917,7 +849,7 @@
   function loop(t) {
     raf = 0;
     if (!visible || document.hidden) return;
-    rain.frame(t); petals.frame(t);   // both, so the crossfade never shows a stale frame
+    rain.frame(t); petals.frame(t);   // both halves are on screen at once
     glass.frame(Math.min((t - (loop.last || t)) / 1000, 0.05)); loop.last = t;
     raf = requestAnimationFrame(loop);
   }
@@ -925,10 +857,12 @@
   function resizeAll() { rain.resize(); petals.resize(); glass.resize(); if (reduced) { rain.frame(0); petals.frame(0); glass.frame(0); } }
 
   new ResizeObserver(resizeAll).observe(section);
-  new IntersectionObserver(([e]) => { visible = e.isIntersecting; start(); }, { threshold: 0.05 }).observe(section);
+  new IntersectionObserver(([e]) => {
+    visible = e.isIntersecting;
+    if (visible) enter();
+    start();
+  }, { threshold: 0.05 }).observe(section);
   document.addEventListener('visibilitychange', start);
-  section.addEventListener('transitionend', start);
-  toggle.addEventListener('click', start);
   resizeAll(); start();
 })();
 
