@@ -297,7 +297,7 @@
       return Array.from({ length: n }, () => {
         const depth = Math.random();                   // 0 far, 1 near
         return {
-          x: rnd(-w * 0.1, w), y: rnd(-h, h),
+          x: rnd(0, w * 1.1), y: rnd(-h, h),
           len: 10 + depth * 16,
           speed: 520 + depth * 480,                    // px per second
           lean: 0.12 + depth * 0.06,                   // horizontal drift per unit fall
@@ -309,13 +309,13 @@
     (ctx, drops, w, h, dt) => {
       ctx.lineCap = 'round';
       for (const p of drops) {
-        p.y += p.speed * dt; p.x -= p.speed * p.lean * dt;
-        if (p.y > h + p.len) { p.y = -p.len - rnd(0, h * 0.3); p.x = rnd(0, w * 1.1); }
+        p.y += p.speed * dt; p.x += p.speed * p.lean * dt;
+        if (p.y > h + p.len) { p.y = -p.len - rnd(0, h * 0.3); p.x = rnd(-w * 0.1, w); }
         ctx.strokeStyle = `rgba(255,255,255,${p.alpha})`;
         ctx.lineWidth = p.width;
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
-        ctx.lineTo(p.x + p.len * p.lean, p.y - p.len);
+        ctx.lineTo(p.x - p.len * p.lean, p.y - p.len);
         ctx.stroke();
       }
     });
