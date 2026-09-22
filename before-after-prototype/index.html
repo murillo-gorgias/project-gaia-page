@@ -63,36 +63,6 @@
   .ba[data-state="before"] .particles--before,
   .ba[data-state="after"]  .particles--after { opacity: 1; visibility: visible; transition-delay: 0s; }
 
-  /* Wet glass: drops that sit on the "window", blur what is behind them, and slide down. */
-  .glass { overflow: hidden; }
-  .drop, .trail {
-    position: absolute; left: 0; top: 0;
-    will-change: transform;
-  }
-  /* Colourless lens. Real drops bend light at their edge: a thin bright ring at the rim, a faint
-     darker band just inside it, a sharp highlight top-left, and a soft glow at the bottom where light
-     leaves the drop. Only white and black at low alpha, so the drop takes its colour from the backdrop. */
-  .drop {
-    border-radius: 50%;
-    -webkit-backdrop-filter: blur(2.5px) contrast(1.18) saturate(1.15);
-    backdrop-filter: blur(2.5px) contrast(1.18) saturate(1.15);
-    background:
-      radial-gradient(ellipse 26% 18% at 31% 25%, rgba(255,255,255,.9) 0, rgba(255,255,255,.3) 55%, rgba(255,255,255,0) 100%),
-      radial-gradient(ellipse 50% 26% at 50% 90%, rgba(255,255,255,.22) 0, rgba(255,255,255,0) 100%),
-      radial-gradient(circle at 50% 50%, rgba(255,255,255,0) 58%, rgba(0,0,0,.13) 76%, rgba(255,255,255,.42) 89%, rgba(255,255,255,.1) 96%, rgba(255,255,255,0) 100%);
-    box-shadow:
-      inset 0 0 1px rgba(255,255,255,.4),
-      inset -1px -2px 3px rgba(0,0,0,.12),
-      0 2px 5px rgba(0,0,0,.16);
-  }
-  .drop.is-sliding { border-radius: 48% 48% 50% 50% / 38% 38% 62% 62%; }
-  .trail {
-    width: 2px; height: 1px; border-radius: 2px;
-    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,.10));
-    -webkit-backdrop-filter: blur(1px) brightness(1.06);
-    backdrop-filter: blur(1px) brightness(1.06);
-    transform-origin: top center;
-  }
   .ba[data-layer="over"] .particles { z-index: 5; }
 
   /* ---------- Toggle ---------- */
@@ -212,7 +182,6 @@
   <div class="scene scene--after" aria-hidden="true"><img src="assets/img/spring-bg.jpg" alt=""></div>
   <div class="particles" aria-hidden="true">
     <canvas id="rain" class="particles--before"></canvas>
-    <div id="glass" class="glass particles--before"></div>
     <canvas id="petals" class="particles--after"></canvas>
   </div>
 
@@ -324,7 +293,7 @@
   /* ---------- Rain: thin white streaks, slight lean, three depths ---------- */
   const rain = makeLayer(document.getElementById('rain'),
     (w, h, d) => {
-      const n = Math.round((w * h) / 9000 * d);       // ~125 drops at 1440x780
+      const n = Math.round((w * h) / 18000 * d);      // ~62 drops at 1440x780
       return Array.from({ length: n }, () => {
         const depth = Math.random();                   // 0 far, 1 near
         return {
@@ -332,7 +301,7 @@
           len: 10 + depth * 16,
           speed: 520 + depth * 480,                    // px per second
           lean: 0.12 + depth * 0.06,                   // horizontal drift per unit fall
-          alpha: 0.10 + depth * 0.28,
+          alpha: 0.05 + depth * 0.14,
           width: 0.8 + depth * 0.6
         };
       });
@@ -440,65 +409,16 @@
       }
     });
 
-  /* ---------- Wet glass: DOM drops with backdrop-filter, sticking then sliding ---------- */
-  const glass = (() => {
-    const root = document.getElementById('glass');
-    let w = 0, h = 0, drops = [];
-    function spawn(d, fresh) {
-      d.size = Math.round(6 + Math.pow(Math.random(), 1.6) * 32);   // 6-38px, skewed small
-      d.x = rnd(w * 0.02, w * 0.98);
-      d.y = fresh ? rnd(-20, h * 0.85) : rnd(-30, h * 0.35);
-      d.y0 = d.y; d.vy = 0; d.vx = 0;
-      d.grow = 0;                                                 // 0..1, settles in over ~1s
-      d.wait = rnd(1, 5);                                         // every drop slides within 1-5s
-      d.sliding = false;
-      d.el.classList.remove('is-sliding');
-      d.trail.style.transform = 'scaleY(0)';
-      d.el.style.width = d.el.style.height = d.size + 'px';
-    }
-    function build() {
-      root.textContent = '';
-      const n = Math.round((w / 1440) * 10 * density);
-      drops = Array.from({ length: n }, () => {
-        const el = document.createElement('div'); el.className = 'drop';
-        const trail = document.createElement('div'); trail.className = 'trail';
-        root.appendChild(trail); root.appendChild(el);
-        const d = { el, trail }; spawn(d, true); return d;
-      });
-    }
-    function resize() { const r = root.getBoundingClientRect(); w = r.width; h = r.height; build(); }
-    function frame(dt) {
-      for (const d of drops) {
-        if (!d.sliding) {
-          d.grow = Math.min(1, d.grow + dt);
-          d.wait -= dt;
-          if (d.wait <= 0) { d.sliding = true; d.el.classList.add('is-sliding'); }
-        } else {
-          d.vy = Math.min(d.vy + 120 * dt * (d.size / 12), 90 + d.size * 5);   // small drops crawl, big ones run
-          d.vx += (rnd(-1, 1) * 25 - d.vx * 2) * dt;               // small wander, damped
-          d.y += d.vy * dt; d.x += d.vx * dt;
-          const len = Math.min(Math.max(0, d.y - d.y0), 40 + d.size * 3);   // short wet track behind the drop
-          d.trail.style.transform = `translate(${d.x - 1}px, ${d.y - len}px) scaleY(${len})`;
-          if (d.y > h + 30) spawn(d, false);
-        }
-        const sc = 0.6 + 0.4 * d.grow, sy = d.sliding ? 1.25 : 1;
-        d.el.style.transform = `translate(${d.x - d.size / 2}px, ${d.y - d.size / 2}px) scale(${sc}, ${sc * sy})`;
-      }
-    }
-    return { resize, frame, reseed: build };
-  })();
-
   /* ---------- Run loop: only the visible scene, only while on screen ---------- */
   let visible = true, raf = 0;
   function loop(t) {
     raf = 0;
     if (!visible || document.hidden) return;
     rain.frame(t); petals.frame(t);   // both, so the crossfade never shows a stale frame
-    glass.frame(Math.min((t - (loop.last || t)) / 1000, 0.05)); loop.last = t;
     raf = requestAnimationFrame(loop);
   }
   function start() { if (!raf && !reduced) raf = requestAnimationFrame(loop); }
-  function resizeAll() { rain.resize(); petals.resize(); glass.resize(); if (reduced) { rain.frame(0); petals.frame(0); glass.frame(0); } }
+  function resizeAll() { rain.resize(); petals.resize(); if (reduced) { rain.frame(0); petals.frame(0); } }
 
   new ResizeObserver(resizeAll).observe(section);
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; start(); }, { threshold: 0.05 }).observe(section);
